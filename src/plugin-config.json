@@ -1,0 +1,94 @@
+{
+  "id": "my-plugin",
+  "name": "My Plugin",
+  "description": "A custom plugin starter template",
+  "private": true,
+  "publicProps": [
+    {
+      "label": "Public Key",
+      "name": "PUBLIC_KEY",
+      "type": { "kind": "text" },
+      "default": "",
+      "placeholder": "...",
+      "help": "Your publishable key"
+    }
+  ],
+  "privateProps": [
+    {
+      "label": "Secret Key",
+      "name": "SECRET_KEY",
+      "type": { "kind": "text" },
+      "default": "",
+      "placeholder": "...",
+      "help": "Your secret key"
+    }
+  ],
+  "blocks": [
+    {
+      "name": "Counter",
+      "entrypoint": "./blocks/Counter/index.tsx",
+      "acceptsChildren": true,
+      "category": "Container",
+      "props": [
+        {
+          "label": "Name",
+          "name": "name",
+          "type": { "kind": "text" },
+          "default": "",
+          "placeholder": "...",
+          "help": "A name prop"
+        }
+      ],
+      "events": [],
+      "defaultStyles": {
+        "": {
+          "flex-grow": "0",
+          "flex-shrink": "1",
+          "flex-basis": "auto",
+          "display": "flex",
+          "flex-direction": "row",
+          "justify-content": "flex-start",
+          "align-items": "stretch",
+          "gap": "0px",
+          "width": "auto",
+          "height": "auto",
+          "min-width": "auto",
+          "min-height": "auto",
+          "max-width": "100%",
+          "max-height": "100%",
+          "padding-right": "0px",
+          "padding-left": "0px",
+          "padding-top": "0px",
+          "padding-bottom": "0px",
+          "border-color": "var(--theme-colors-gray-200)",
+          "border-radius": "0px",
+          "border-width": "0px",
+          "border-style": "solid",
+          "background-color": "transparent",
+          "box-shadow": "var(--theme-shadows-none)"
+        }
+      },
+      "sources": [],
+      "actions": []
+    }
+  ],
+  "schemas": [],
+  "serverActions": [
+    {
+      "name": "my-server-action",
+      "description": "Do something on the server",
+      "entrypoint": "./actions/my-action.ts",
+      "props": [
+        {
+          "label": "Amount",
+          "name": "amount",
+          "type": { "kind": "number" },
+          "default": 0,
+          "placeholder": "Amount in cents",
+          "help": "Amount in cents"
+        }
+      ],
+      "outputType": { "kind": "text" }
+    }
+  ]
+}

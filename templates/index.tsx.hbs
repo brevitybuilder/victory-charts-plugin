@@ -1,0 +1,13 @@
+import clsx from "clsx";
+import * as React from "react";
+import * as styles from "./styles.module.css";
+
+export function {{pascalCase name}}(props: React.HTMLAttributes<HTMLDivElement>) {
+  return (
+    <div
+      className={clsx("{{dashCase name}}", styles.{{camelCase name}}, props.className)}
+      {...props}
+    >
+    </div>
+  );
+}

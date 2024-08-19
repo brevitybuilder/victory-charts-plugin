@@ -1,0 +1,48 @@
+{
+  "name": "brevity-plugin-starter",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "publish-plugin": "brevity plugin publish patch -c ./src/plugin-config.json",
+    "format": "prettier --write '**/*.{ts,tsx,js,jsx,json,md,css,html}'",
+    "check": "tsc -p tsconfig.json --noEmit",
+    "lint": "oxlint --fix",
+    "preview": "vite preview",
+    "storybook": "storybook dev -p 6006",
+    "test": "vitest run",
+    "test:watch": "vitest --watch",
+    "build-storybook": "storybook build"
+  },
+  "dependencies": {
+    "@brevity-builder/react": "^1.2.126",
+    "clsx": "^2.1.1",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "vitest": "^2.0.5",
+    "zustand": "^4.5.5"
+  },
+  "devDependencies": {
+    "@brevity-builder/cli": "^1.2.127",
+    "@builder.io/partytown": "^0.10.2",
+    "@storybook/addon-essentials": "^8.2.9",
+    "@storybook/addon-interactions": "^8.2.9",
+    "@storybook/addon-links": "^8.2.9",
+    "@storybook/addon-onboarding": "^8.2.9",
+    "@storybook/blocks": "^8.2.9",
+    "@storybook/react": "^8.2.9",
+    "@storybook/react-vite": "^8.2.9",
+    "@storybook/test": "^8.2.9",
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "@vitejs/plugin-react": "^4.3.1",
+    "oxlint": "^0.7.2",
+    "plop": "^4.0.1",
+    "storybook": "^8.2.9",
+    "typescript": "^5.5.4",
+    "typescript-plugin-css-modules": "^5.1.0",
+    "use-sync-external-store": "^1.2.2",
+    "vite": "^5.4.1"
+  }
+}

@@ -1,0 +1,15 @@
+interface {{pascalCase name}}Props {
+  // Define the properties of your action here
+}
+
+export default async function {{pascalCase name}}(
+  actionProps: {{pascalCase name}}Props,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  env: {
+    // public and private plugin settings are here
+    ENVIRONMENT: "production" | "staging" | "preview";
+  },
+): Promise<Response> {
+  // Define the logic of your action here
+  return Response.json({ /* Define the response of your action here */ });
+}
