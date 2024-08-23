@@ -134,7 +134,8 @@ export type ChartProps =
     };
 
 export function Chart({ config }: { config: ChartProps }) {
-  switch (config.chartType) {
+  if (!config) return null;
+  switch (config?.chartType) {
     case "bar":
       return <BarVariant config={config} />;
     case "line":

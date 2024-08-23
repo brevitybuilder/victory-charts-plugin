@@ -1,94 +1,164 @@
 {
-  "id": "my-plugin",
-  "name": "My Plugin",
-  "description": "A custom plugin starter template",
+  "id": "victory-chart",
+  "name": "Victory Chart Plugin",
+  "description": "Victory Chart Plugin",
   "private": true,
-  "publicProps": [
-    {
-      "label": "Public Key",
-      "name": "PUBLIC_KEY",
-      "type": { "kind": "text" },
-      "default": "",
-      "placeholder": "...",
-      "help": "Your publishable key"
-    }
-  ],
-  "privateProps": [
-    {
-      "label": "Secret Key",
-      "name": "SECRET_KEY",
-      "type": { "kind": "text" },
-      "default": "",
-      "placeholder": "...",
-      "help": "Your secret key"
-    }
-  ],
+  "publicProps": [],
+  "privateProps": [],
   "blocks": [
     {
-      "name": "Counter",
-      "entrypoint": "./blocks/Counter/index.tsx",
-      "acceptsChildren": true,
-      "category": "Container",
+      "name": "Chart",
+      "entrypoint": "./blocks/chart/index.tsx",
+      "acceptsChildren": false,
+      "category": "Charts",
       "props": [
         {
-          "label": "Name",
-          "name": "name",
-          "type": { "kind": "text" },
-          "default": "",
+          "label": "Config",
+          "name": "config",
+          "type": { "kind": "victory-chart|Config" },
+          "default": null,
           "placeholder": "...",
-          "help": "A name prop"
+          "help": "The config prop"
         }
       ],
       "events": [],
       "defaultStyles": {
         "": {
-          "flex-grow": "0",
-          "flex-shrink": "1",
-          "flex-basis": "auto",
-          "display": "flex",
-          "flex-direction": "row",
-          "justify-content": "flex-start",
-          "align-items": "stretch",
-          "gap": "0px",
-          "width": "auto",
-          "height": "auto",
-          "min-width": "auto",
-          "min-height": "auto",
-          "max-width": "100%",
-          "max-height": "100%",
-          "padding-right": "0px",
-          "padding-left": "0px",
-          "padding-top": "0px",
-          "padding-bottom": "0px",
-          "border-color": "var(--theme-colors-gray-200)",
-          "border-radius": "0px",
-          "border-width": "0px",
-          "border-style": "solid",
-          "background-color": "transparent",
-          "box-shadow": "var(--theme-shadows-none)"
+          "width": "100%"
         }
       },
       "sources": [],
       "actions": []
     }
   ],
-  "schemas": [],
-  "serverActions": [
+  "schemas": [
     {
-      "name": "my-server-action",
-      "description": "Do something on the server",
-      "entrypoint": "./actions/my-action.ts",
-      "props": [
-        {
-          "label": "Amount",
-          "name": "amount",
-          "type": { "kind": "number" },
-          "default": 0,
-          "placeholder": "Amount in cents",
-          "help": "Amount in cents"
+      "$schema": "http://json-schema.org/draft-04/schema#",
+      "id": "Config",
+      "type": "object",
+      "properties": {
+        "chartType": {
+          "type": "string"
+        },
+        "columns": {
+          "type": "array",
+          "items": {
+            "$ref": "victory-chart|Column"
+          }
+        },
+        "rows": {
+          "type": "array",
+          "items": {
+            "$ref": "victory-chart|Row"
+          }
+        },
+        "option1": {
+          "type": "string"
+        },
+        "option2": {
+          "type": "string"
+        },
+        "option3": {
+          "type": "string"
         }
-      ],
-      "outputType": { "kind": "text" }
+      },
+      "required": ["chartType", "columns", "rows"]
+    },
+    {
+      "$schema": "http://json-schema.org/draft-04/schema#",
+      "id": "Column",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string"
+        },
+        "options": {
+          "type": "array",
+          "items": {
+            "$ref": "victory-chart|Option"
+          }
+        }
+      },
+      "required": ["id", "title", "type"]
+    },
+    {
+      "$schema": "http://json-schema.org/draft-04/schema#",
+      "id": "Row",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "complete": {
+          "type": "boolean"
+        },
+        "cells": {
+          "type": "array",
+          "items": {
+            "$ref": "victory-chart|Cell"
+          }
+        }
+      },
+      "required": ["id", "boolean"]
+    },
+    {
+      "$schema": "http://json-schema.org/draft-04/schema#",
+      "id": "Cell",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "rowId": {
+          "type": "string"
+        },
+        "columnId": {
+          "type": "string"
+        },
+        "textValue": {
+          "type": "string"
+        },
+        "numberValue": {
+          "type": "number"
+        },
+        "dateValue": {
+          "type": "string"
+        },
+        "selectValue": {
+          "type": "string"
+        },
+        "userValue": {
+          "type": "string"
+        },
+        "multiSelectValue": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": ["id", "rowId", "columnId"]
+    },
+    {
+      "$schema": "http://json-schema.org/draft-04/schema#",
+      "id": "Option",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        }
+      },
+      "required": ["id", "title"]
     }
-  ]
+  ],
+  "serverActions": []
 }
