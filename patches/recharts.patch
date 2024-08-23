@@ -1,0 +1,23 @@
+diff --git a/es6/polar/Pie.js b/es6/polar/Pie.js
+index 1291b809fc37e9d9cf0256d26f1203be2cfe8c95..dff3ff89b54d8880322847f71f68231961083a9c 100644
+--- a/es6/polar/Pie.js
++++ b/es6/polar/Pie.js
+@@ -543,7 +543,8 @@ _defineProperty(Pie, "getComposedData", function (_ref4) {
+         startAngle: tempStartAngle,
+         endAngle: tempEndAngle,
+         payload: entry,
+-        paddingAngle: mathSign(deltaAngle) * paddingAngle
++        paddingAngle: mathSign(deltaAngle) * paddingAngle,
++        outerRadius: entry.outerRadius ? entry.outerRadius * coordinate.outerRadius : coordinate.outerRadius
+       });
+       return prev;
+     });
+diff --git a/types/component/Cell.d.ts b/types/component/Cell.d.ts
+index 377396252c984ac2d718a700cf2ab313dbe5241f..5ca6916e38dba68a8926c4cb12ecec575b761bc1 100644
+--- a/types/component/Cell.d.ts
++++ b/types/component/Cell.d.ts
+@@ -1,3 +1,3 @@
+ import type { FunctionComponent, SVGProps } from 'react';
+-export type Props = SVGProps<SVGElement>;
++export type Props = SVGProps<SVGElement> & { outerRadius: number; innerRadius: number; };
+ export declare const Cell: FunctionComponent<Props>;

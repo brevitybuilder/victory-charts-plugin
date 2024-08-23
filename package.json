@@ -46,5 +46,10 @@
     "typescript-plugin-css-modules": "^5.1.0",
     "use-sync-external-store": "^1.2.2",
     "vite": "^5.4.1"
+  },
+  "pnpm": {
+    "patchedDependencies": {
+      "recharts": "patches/recharts.patch"
+    }
   }
 }

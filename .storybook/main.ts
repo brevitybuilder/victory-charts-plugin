@@ -19,6 +19,9 @@ const config: StorybookConfig = {
   async viteFinal(config) {
     // Merge custom configuration into the default config
     return mergeConfig(config, {
+      resolve: {
+        mainFields: ["browser", "module", "jsnext:main", "jsnext"],
+      },
       lightningcss: {
         drafts: {
           nesting: true,

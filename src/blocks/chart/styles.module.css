@@ -25,3 +25,10 @@
 .square {
   aspect-ratio: 1;
 }
+
+.polarGrid:first-child {
+  fill: var(--chart-border-alpha);
+}
+.polarGrid:last-child {
+  fill: white;
+}
