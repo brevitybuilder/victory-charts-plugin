@@ -46,6 +46,30 @@ export type Column =
       id: string;
       title: string;
       type: "date";
+    }
+  | {
+      id: string;
+      title: string;
+      type: "multiSelect";
+      options: {
+        id: string;
+        title: string;
+      }[];
+    }
+  | {
+      id: string;
+      title: string;
+      type: "user";
+    }
+  | {
+      id: string;
+      title: string;
+      type: "text";
+    }
+  | {
+      id: string;
+      title: string;
+      type: "number";
     };
 
 export type Cell = {
@@ -128,44 +152,97 @@ export function Chart({ config }: { config: ChartProps }) {
   }
 }
 
+function bucketDataByColumn(
+  rows: Row[],
+  column: Column,
+  dateGrouping?: "week" | "month" | "year",
+) {
+  switch (column.type) {
+    case "select":
+      const valuesById = column.options.reduce(
+        (acc, option) => {
+          acc[option.id] = option.title;
+          return acc;
+        },
+        {} as Record<string, string>,
+      );
+      return Object.groupBy(rows, (row) => {
+        const cell = row.cells.find((c) => c.columnId === column.id)!;
+        return valuesById[cell.selectValue ?? ""] ?? "other";
+      });
+    case "date":
+      return Object.groupBy(rows, (row) => {
+        const cell = row.cells.find((c) => c.columnId === column.id)!;
+        switch (dateGrouping) {
+          case "week":
+            const [year, week] = getWeekNumber(new Date(cell.dateValue!));
+            return `${year}-${week}`;
+          case "month":
+            return `${new Date(cell.dateValue!).getUTCFullYear()}-${
+              new Date(cell.dateValue!).getUTCMonth() + 1
+            }`;
+          case "year":
+            return new Date(cell.dateValue!).getUTCFullYear();
+          default:
+            return cell.dateValue;
+        }
+      });
+    case "multiSelect":
+      const groups: Record<string, Row[]> = {};
+      rows.forEach((row) => {
+        const cell = row.cells.find((c) => c.columnId === column.id)!;
+        cell.mutliSelectValue?.forEach((value) => {
+          (groups[value] ?? ([] as Row[])).push(row);
+        });
+      });
+      return groups;
+    case "user":
+      return Object.groupBy(rows, (row) => {
+        const cell = row.cells.find((c) => c.columnId === column.id)!;
+        return cell.userValue ?? "other";
+      });
+    case "text":
+      return Object.groupBy(rows, (row) => {
+        const cell = row.cells.find((c) => c.columnId === column.id)!;
+        return cell.textValue ?? "other";
+      });
+    case "number":
+      // not really supported but here anyway
+      return Object.groupBy(rows, (row) => {
+        const cell = row.cells.find((c) => c.columnId === column.id)!;
+        return String(cell.numberValue) ?? "other";
+      });
+  }
+}
+
 function BarVariant({
   config,
 }: {
   config: Extract<ChartProps, { chartType: "bar" }>;
 }) {
-  const column = config.columns.find((c) => c.id === config.option1) as Extract<
-    Column,
-    { type: "select" }
-  >;
-  const finalData: Record<string, number> = {};
-  const groups = Object.groupBy(config.rows, (row) => {
-    const cell = row.cells.find((c) => c.columnId === column.id)!;
-    return cell.selectValue ?? "other";
-  });
-  Object.entries(groups).reduce((acc, [key, rows]) => {
-    if (config.option2 === "count") {
-      acc[key] = rows?.length ?? 0;
-    } else {
-      const completed = rows!.reduce((acc, row) => {
-        if (row.complete) {
-          return acc + 1;
-        }
-        return acc;
-      }, 0);
-      acc[key] = completed / (rows?.length ?? 1);
-    }
-    return acc;
-  }, finalData);
+  const column = config.columns.find((c) => c.id === config.option1)!;
+  const groups = bucketDataByColumn(config.rows, column, config.option3);
   const chartConfig: ChartConfig = {};
-  const chartData = column.options.map((option, idx) => {
-    chartConfig[option.id] = {
-      label: option.title,
+  const chartData = Object.entries(groups).map(([label, rows], idx) => {
+    if (!rows) {
+      return {
+        label,
+        value: 0,
+        fill: `hsl(var(--chart-${idx + 1}))`,
+      };
+    }
+    chartConfig[label] = {
+      label: label,
       color: `hsl(var(--chart-${idx + 1}))`,
     };
     return {
-      label: option.title,
-      value: finalData[option.id] ?? 0,
-      fill: `var(--color-${option.id})`,
+      label,
+      value:
+        config.option2 === "count"
+          ? rows.length
+          : rows?.reduce((acc, row) => (row.complete ? acc + 1 : acc), 0) /
+            rows.length,
+      fill: `hsl(var(--chart-${idx + 1}))`,
     };
   });
   return (
@@ -196,22 +273,7 @@ function LineVariant({
     Column,
     { type: "date" }
   >;
-  const groups = Object.groupBy(config.rows, (row) => {
-    const cell = row.cells.find((c) => c.columnId === column.id)!;
-    switch (config.option3) {
-      case "week":
-        const [year, week] = getWeekNumber(new Date(cell.dateValue!));
-        return `${year}-${week}`;
-      case "month":
-        return `${new Date(cell.dateValue!).getUTCFullYear()}-${
-          new Date(cell.dateValue!).getUTCMonth() + 1
-        }`;
-      case "year":
-        return new Date(cell.dateValue!).getUTCFullYear();
-      default:
-        return cell.dateValue;
-    }
-  });
+  const groups = bucketDataByColumn(config.rows, column, config.option3);
   const chartData = Object.entries(groups).map(([key, rows]) => {
     return {
       x: key,
@@ -220,7 +282,7 @@ function LineVariant({
   });
   const chartConfig = {
     y: {
-      label: "Month",
+      label: column.title,
       color: "hsl(var(--chart-1))",
     },
   } satisfies ChartConfig;
@@ -261,31 +323,26 @@ function DonutVariant({
 }: {
   config: Extract<ChartProps, { chartType: "donut" }>;
 }) {
-  const column = config.columns.find((c) => c.id === config.option1) as Extract<
-    Column,
-    { type: "select" }
-  >;
-  const finalData: Record<string, number> = {};
-  const groups = Object.groupBy(config.rows, (row) => {
-    const cell = row.cells.find((c) => c.columnId === column.id)!;
-    return cell.selectValue ?? "other";
-  });
-  Object.entries(groups).reduce((acc, [key, rows]) => {
-    acc[key] = rows?.length ?? 0;
-    return acc;
-  }, finalData);
+  const column = config.columns.find((c) => c.id === config.option1)!;
+  const groups = bucketDataByColumn(config.rows, column, config.option3);
   const chartConfig: ChartConfig = {};
-  const total = Object.values(finalData).reduce((acc, curr) => acc + curr, 0);
-  const chartData = column.options.map((option, idx) => {
-    chartConfig[option.id] = {
-      label: option.title,
+  const chartData = Object.entries(groups).map(([label, rows], idx) => {
+    if (!rows) {
+      return {
+        label,
+        value: 0,
+        fill: `hsl(var(--chart-${idx + 1}))`,
+      };
+    }
+    chartConfig[label] = {
+      label: label,
       color: `hsl(var(--chart-${idx + 1}))`,
     };
     return {
-      label: option.title,
-      percent: ((finalData[option.id] ?? 0) / total) * 100,
-      value: finalData[option.id] ?? 0,
-      fill: `var(--color-${option.id})`,
+      label,
+      value: rows.length,
+      percent: (rows.length / config.rows.length) * 100,
+      fill: `hsl(var(--chart-${idx + 1}))`,
     };
   });
   return (
@@ -294,8 +351,7 @@ function DonutVariant({
         <ChartTooltip
           cursor={false}
           content={<ChartTooltipContent hideLabel />}
-          formatter={(value, name, item, idx, payload) => {
-            console.log(value, name, item, idx, payload);
+          formatter={(value, name, item, _idx, payload) => {
             return (
               <>
                 <div
@@ -323,7 +379,8 @@ function DonutVariant({
                   </div>
                   {value && (
                     <span className={commonStyles.tooltipContentValue}>
-                      {value} ({(payload as any).payload.percent.toFixed(2)}%)
+                      {value} ({(payload as any)?.payload?.percent?.toFixed(2)}
+                      %)
                     </span>
                   )}
                 </div>
@@ -332,6 +389,8 @@ function DonutVariant({
           }}
         />
         <Pie
+          startAngle={90}
+          endAngle={-270}
           data={chartData}
           dataKey="value"
           nameKey="label"
@@ -371,7 +430,8 @@ function RadialVariant({
     <ChartContainer config={chartConfig} className={styles.chart}>
       <RadialBarChart
         data={chartData}
-        endAngle={360 * percentCompleted}
+        startAngle={90}
+        endAngle={-360 * percentCompleted + 90}
         innerRadius={80}
         outerRadius={140}
       >
@@ -424,30 +484,25 @@ function RadarVariant({
 }: {
   config: Extract<ChartProps, { chartType: "radar" }>;
 }) {
-  const column = config.columns.find((c) => c.id === config.option1) as Extract<
-    Column,
-    { type: "select" }
-  >;
-  const finalData: Record<string, number> = {};
-  const groups = Object.groupBy(config.rows, (row) => {
-    const cell = row.cells.find((c) => c.columnId === column.id)!;
-    return cell.selectValue ?? "other";
-  });
-  Object.entries(groups).reduce((acc, [key, rows]) => {
-    acc[key] = rows?.length ?? 0;
-    return acc;
-  }, finalData);
-  const chartConfig: ChartConfig = {
-    value: {
-      label: "Completed",
-      color: "hsl(var(--chart-1))",
-    },
-  };
-  const chartData = column.options.map((option, idx) => {
+  const column = config.columns.find((c) => c.id === config.option1)!;
+  const groups = bucketDataByColumn(config.rows, column, "year");
+  const chartConfig: ChartConfig = {};
+  const chartData = Object.entries(groups).map(([label, rows], idx) => {
+    if (!rows) {
+      return {
+        label,
+        value: 0,
+        fill: `hsl(var(--chart-${idx + 1}))`,
+      };
+    }
+    chartConfig[label] = {
+      label: label,
+      color: `hsl(var(--chart-${idx + 1}))`,
+    };
     return {
-      label: option.title,
-      value: finalData[option.id] ?? 0,
-      fill: `var(--color-${option.id})`,
+      label,
+      value: rows.length,
+      fill: `hsl(var(--chart-${idx + 1}))`,
     };
   });
   return (
@@ -479,40 +534,29 @@ function PolarVariant({
 }: {
   config: Extract<ChartProps, { chartType: "polar" }>;
 }) {
-  const column = config.columns.find((c) => c.id === config.option1) as Extract<
-    Column,
-    { type: "select" }
-  >;
-  const finalData: Record<string, { completed: number; total: number }> = {};
-  const groups = Object.groupBy(config.rows, (row) => {
-    const cell = row.cells.find((c) => c.columnId === column.id)!;
-    return cell.selectValue ?? "other";
-  });
-  Object.entries(groups).reduce((acc, [key, rows]) => {
-    const completed = rows!.reduce((acc, row) => {
-      if (row.complete) {
-        return acc + 1;
-      }
-      return acc;
-    }, 0);
-    acc[key] = {
-      completed,
-      total: rows?.length ?? 1,
-    };
-    return acc;
-  }, finalData);
+  const column = config.columns.find((c) => c.id === config.option1)!;
+  const groups = bucketDataByColumn(config.rows, column, config.option3);
   const chartConfig: ChartConfig = {};
-  const chartData = column.options.map((option, idx) => {
-    chartConfig[option.id] = {
-      label: option.title,
+  const chartData = Object.entries(groups).map(([label, rows], idx) => {
+    if (!rows) {
+      return {
+        label,
+        value: 0,
+        fill: `hsl(var(--chart-${idx + 1}))`,
+      };
+    }
+    chartConfig[label] = {
+      label: label,
       color: `hsl(var(--chart-${idx + 1}))`,
     };
-    const data = finalData[option.id] ?? { completed: 0, total: 0 };
+    const percenetComplete =
+      rows?.reduce((acc, row) => (row.complete ? acc + 1 : acc), 0) /
+      rows.length;
     return {
-      label: option.title,
-      outerRadius: data.completed / data.total,
-      value: data.total,
-      fill: `var(--color-${option.id})`,
+      label,
+      value: rows.length,
+      outerRadius: percenetComplete,
+      fill: `hsl(var(--chart-${idx + 1}))`,
     };
   });
   return (
@@ -524,13 +568,20 @@ function PolarVariant({
         />
 
         <PolarGrid gridType="circle" />
-        <Pie data={chartData} dataKey="value" nameKey="label" strokeWidth={5}>
+        <Pie
+          data={chartData}
+          dataKey="value"
+          nameKey="label"
+          strokeWidth={5}
+          startAngle={90}
+          endAngle={-270}
+        >
           {chartData.map((entry, idx) => {
             return (
               // @ts-ignore
               <Cell
                 key={entry.label}
-                fill={`var(--color-${column.options[idx].id})`}
+                fill={entry.fill}
                 outerRadius={entry.outerRadius}
               />
             );

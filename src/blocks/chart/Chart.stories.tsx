@@ -441,6 +441,23 @@ export const Radar: Story = {
               ],
               complete: true,
             },
+            {
+              id: "4",
+              cells: [
+                {
+                  id: "1",
+                  rowId: "3",
+                  columnId: "value",
+                  textValue: null,
+                  numberValue: null,
+                  dateValue: null,
+                  selectValue: "3",
+                  userValue: null,
+                  mutliSelectValue: null,
+                },
+              ],
+              complete: true,
+            },
           ],
           option1: "value",
           option2: "count",
