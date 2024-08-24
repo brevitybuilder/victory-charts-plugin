@@ -9,6 +9,82 @@ const meta: Meta<typeof Chart> = {
 
 type Story = StoryObj<typeof Chart>;
 
+export const Demo: Story = {
+  render: () => (
+    <div style={{ width: "500px" }}>
+      <Chart
+        config={{
+          rows: [
+            {
+              id: "bK7zYtcWTdpmp3ztkCN3H",
+              cells: [
+                {
+                  id: "yQMwxXcdNidKCPJxBNTjU",
+                  rowId: "bK7zYtcWTdpmp3ztkCN3H",
+                  columnId: "K6UUrrbb79hkjj48FinNV",
+                  dateValue: "",
+                  textValue: "Hey",
+                  userValue: "",
+                  numberValue: null,
+                  selectValue: "",
+                  multiSelectValue: [],
+                },
+              ],
+              complete: true,
+            },
+            {
+              id: "QEMfCDTjFhjWH6JG7Pg4h",
+              cells: [
+                {
+                  id: "h8FgMndbwHF7zx936fXkd",
+                  rowId: "QEMfCDTjFhjWH6JG7Pg4h",
+                  columnId: "K6UUrrbb79hkjj48FinNV",
+                  dateValue: "",
+                  textValue: "Yes",
+                  userValue: "",
+                  numberValue: null,
+                  selectValue: "",
+                  multiSelectValue: [],
+                },
+              ],
+              complete: true,
+            },
+            {
+              id: "nAF93ReRc6Vyrdw9rbbAX",
+              cells: [
+                {
+                  id: "LVmb6EqLTjnndwBXxCtLg",
+                  rowId: "nAF93ReRc6Vyrdw9rbbAX",
+                  columnId: "K6UUrrbb79hkjj48FinNV",
+                  dateValue: "",
+                  textValue: "no",
+                  userValue: "",
+                  numberValue: null,
+                  selectValue: "",
+                  multiSelectValue: [],
+                },
+              ],
+              complete: true,
+            },
+          ],
+          columns: [
+            {
+              id: "K6UUrrbb79hkjj48FinNV",
+              type: "text",
+              title: "new onwe",
+              options: [],
+            },
+          ],
+          option1: "K6UUrrbb79hkjj48FinNV",
+          option2: "count",
+          option3: "",
+          chartType: "bar",
+        }}
+      />
+    </div>
+  ),
+};
+
 export const Bar: Story = {
   render: () => (
     <div style={{ width: "500px" }}>

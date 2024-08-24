@@ -16,12 +16,12 @@
     "build-storybook": "storybook build"
   },
   "dependencies": {
-    "@brevity-builder/react": "^1.2.126",
+    "@brevity-builder/react": "^1.2.130",
     "clsx": "^2.1.1",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "react-is": "^18.3.1",
-    "recharts": "^2.12.7",
+    "react": "19.0.0-rc-a7d1240c-20240731",
+    "react-dom": "19.0.0-rc-a7d1240c-20240731",
+    "react-is": "19.0.0-rc-a7d1240c-20240731",
+    "recharts": "2.13.0-alpha.4",
     "vitest": "^2.0.5",
     "zustand": "^4.5.5"
   },
@@ -36,18 +36,23 @@
     "@storybook/react": "^8.2.9",
     "@storybook/react-vite": "^8.2.9",
     "@storybook/test": "^8.2.9",
-    "@types/react": "^18.3.3",
+    "@types/react": "^18.3.4",
     "@types/react-dom": "^18.3.0",
     "@vitejs/plugin-react": "^4.3.1",
-    "oxlint": "^0.7.2",
+    "oxlint": "^0.8.0",
     "plop": "^4.0.1",
     "storybook": "^8.2.9",
     "typescript": "^5.5.4",
     "typescript-plugin-css-modules": "^5.1.0",
     "use-sync-external-store": "^1.2.2",
-    "vite": "^5.4.1"
+    "vite": "^5.4.2"
   },
   "pnpm": {
+    "overrides": {
+      "react": "$react",
+      "react-dom": "$react-dom",
+      "react-is": "$react-is"
+    },
     "patchedDependencies": {
       "recharts": "patches/recharts.patch"
     }

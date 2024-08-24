@@ -133,22 +133,27 @@ export type ChartProps =
       rows: Row[];
     };
 
-export function Chart({ config }: { config: ChartProps }) {
+export function Chart({ config, ...props }: { config: ChartProps }) {
+  console.log("victory-chart", config);
   if (!config) return null;
+  if (!config.rows?.length || !config.columns?.length) {
+    return <div className={styles.noData}>No data</div>;
+  }
   switch (config?.chartType) {
     case "bar":
-      return <BarVariant config={config} />;
+      return <BarVariant config={config} {...props} />;
     case "line":
-      return <LineVariant config={config} />;
+      return <LineVariant config={config} {...props} />;
     case "donut":
-      return <DonutVariant config={config} />;
+      return <DonutVariant config={config} {...props} />;
     case "radar":
-      return <RadarVariant config={config} />;
+      return <RadarVariant config={config} {...props} />;
     case "polar":
-      return <PolarVariant config={config} />;
+      return <PolarVariant config={config} {...props} />;
     case "radial":
-      return <RadialVariant config={config} />;
+      return <RadialVariant config={config} {...props} />;
     default:
+      console.error("Unknown chart type", config);
       return null;
   }
 }
@@ -158,7 +163,7 @@ function bucketDataByColumn(
   column: Column,
   dateGrouping?: "week" | "month" | "year",
 ) {
-  switch (column.type) {
+  switch (column?.type) {
     case "select":
       const valuesById = column.options.reduce(
         (acc, option) => {
@@ -218,11 +223,19 @@ function bucketDataByColumn(
 
 function BarVariant({
   config,
+  className,
+  ...props
 }: {
   config: Extract<ChartProps, { chartType: "bar" }>;
+  className?: string;
 }) {
   const column = config.columns.find((c) => c.id === config.option1)!;
+  console.log("bar column", column);
+  if (!column) {
+    return <div className={styles.noData}>Missing column</div>;
+  }
   const groups = bucketDataByColumn(config.rows, column, config.option3);
+  console.log("bar groups", groups);
   const chartConfig: ChartConfig = {};
   const chartData = Object.entries(groups).map(([label, rows], idx) => {
     if (!rows) {
@@ -246,8 +259,16 @@ function BarVariant({
       fill: `hsl(var(--chart-${idx + 1}))`,
     };
   });
+  console.log("bar chartData", chartData);
+  console.log("bar chartConfig", chartConfig);
+  console.log("BarChart", BarChart);
+  console.log("Bar", Bar);
   return (
-    <ChartContainer config={chartConfig} className={styles.chart}>
+    <ChartContainer
+      config={chartConfig}
+      className={clsx(styles.chart, className)}
+      {...props}
+    >
       <BarChart accessibilityLayer data={chartData}>
         <CartesianGrid vertical={false} />
         <XAxis
@@ -267,13 +288,19 @@ function BarVariant({
 
 function LineVariant({
   config,
+  className,
+  ...props
 }: {
   config: Extract<ChartProps, { chartType: "line" }>;
+  className?: string;
 }) {
   const column = config.columns.find((c) => c.id === config.option1) as Extract<
     Column,
     { type: "date" }
   >;
+  if (!column) {
+    return <div className={styles.noData}>Missing column</div>;
+  }
   const groups = bucketDataByColumn(config.rows, column, config.option3);
   const chartData = Object.entries(groups).map(([key, rows]) => {
     return {
@@ -288,7 +315,11 @@ function LineVariant({
     },
   } satisfies ChartConfig;
   return (
-    <ChartContainer config={chartConfig} className={styles.chart}>
+    <ChartContainer
+      config={chartConfig}
+      className={clsx(styles.chart, className)}
+      {...props}
+    >
       <LineChart
         accessibilityLayer
         data={chartData}
@@ -321,10 +352,16 @@ function LineVariant({
 
 function DonutVariant({
   config,
+  className,
+  ...props
 }: {
   config: Extract<ChartProps, { chartType: "donut" }>;
+  className?: string;
 }) {
   const column = config.columns.find((c) => c.id === config.option1)!;
+  if (!column) {
+    return <div className={styles.noData}>Missing column</div>;
+  }
   const groups = bucketDataByColumn(config.rows, column, config.option3);
   const chartConfig: ChartConfig = {};
   const chartData = Object.entries(groups).map(([label, rows], idx) => {
@@ -347,7 +384,11 @@ function DonutVariant({
     };
   });
   return (
-    <ChartContainer config={chartConfig} className={styles.chart}>
+    <ChartContainer
+      config={chartConfig}
+      className={clsx(styles.chart, className)}
+      {...props}
+    >
       <PieChart data={chartData}>
         <ChartTooltip
           cursor={false}
@@ -405,8 +446,11 @@ function DonutVariant({
 
 function RadialVariant({
   config,
+  className,
+  ...props
 }: {
   config: Extract<ChartProps, { chartType: "donut" }>;
+  className?: string;
 }) {
   const completedRowCount = config.rows.reduce((acc, row) => {
     if (row.complete) {
@@ -428,7 +472,11 @@ function RadialVariant({
     },
   } satisfies ChartConfig;
   return (
-    <ChartContainer config={chartConfig} className={styles.chart}>
+    <ChartContainer
+      config={chartConfig}
+      className={clsx(styles.chart, className)}
+      {...props}
+    >
       <RadialBarChart
         data={chartData}
         startAngle={90}
@@ -482,10 +530,16 @@ function RadialVariant({
 
 function RadarVariant({
   config,
+  className,
+  ...props
 }: {
   config: Extract<ChartProps, { chartType: "radar" }>;
+  className?: string;
 }) {
   const column = config.columns.find((c) => c.id === config.option1)!;
+  if (!column) {
+    return <div className={styles.noData}>Missing column</div>;
+  }
   const groups = bucketDataByColumn(config.rows, column, "year");
   const chartConfig: ChartConfig = {};
   const chartData = Object.entries(groups).map(([label, rows], idx) => {
@@ -532,10 +586,16 @@ function RadarVariant({
 // Polar Variant
 function PolarVariant({
   config,
+  className,
+  ...props
 }: {
   config: Extract<ChartProps, { chartType: "polar" }>;
+  className?: string;
 }) {
   const column = config.columns.find((c) => c.id === config.option1)!;
+  if (!column) {
+    return <div className={styles.noData}>Missing column</div>;
+  }
   const groups = bucketDataByColumn(config.rows, column, config.option3);
   const chartConfig: ChartConfig = {};
   const chartData = Object.entries(groups).map(([label, rows], idx) => {
@@ -561,7 +621,11 @@ function PolarVariant({
     };
   });
   return (
-    <ChartContainer config={chartConfig} className={styles.chart}>
+    <ChartContainer
+      config={chartConfig}
+      className={clsx(styles.chart, className)}
+      {...props}
+    >
       <PieChart data={chartData}>
         <ChartTooltip
           cursor={false}
