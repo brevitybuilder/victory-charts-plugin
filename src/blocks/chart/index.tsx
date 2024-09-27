@@ -108,7 +108,7 @@ export type ChartProps =
       option3: "week" | "month" | "year";
     }
   | {
-      chartType: "donut";
+      chartType: "doughnut";
       columns: Column[];
       rows: Row[];
       option1: string; // label
@@ -144,7 +144,7 @@ export function Chart({ config, ...props }: { config: ChartProps }) {
       return <BarVariant config={config} {...props} />;
     case "line":
       return <LineVariant config={config} {...props} />;
-    case "donut":
+    case "doughnut":
       return <DonutVariant config={config} {...props} />;
     case "radar":
       return <RadarVariant config={config} {...props} />;
@@ -173,12 +173,14 @@ function bucketDataByColumn(
         {} as Record<string, string>,
       );
       return Object.groupBy(rows, (row) => {
-        const cell = row.cells.find((c) => c.columnId === column.id)!;
-        return valuesById[cell.selectValue ?? ""] ?? "other";
+        const cell = row.cells.find((c) => c.columnId === column.id);
+        if (!cell) return "Unknown";
+        return valuesById[cell.selectValue ?? ""] ?? "Unknown";
       });
     case "date":
       return Object.groupBy(rows, (row) => {
-        const cell = row.cells.find((c) => c.columnId === column.id)!;
+        const cell = row.cells.find((c) => c.columnId === column.id);
+        if (!cell) return "Unknown";
         switch (dateGrouping) {
           case "week":
             const [year, week] = getWeekNumber(new Date(cell.dateValue!));
@@ -196,7 +198,8 @@ function bucketDataByColumn(
     case "multiSelect":
       const groups: Record<string, Row[]> = {};
       rows.forEach((row) => {
-        const cell = row.cells.find((c) => c.columnId === column.id)!;
+        const cell = row.cells.find((c) => c.columnId === column.id);
+        if (!cell) return;
         cell.mutliSelectValue?.forEach((value) => {
           (groups[value] ?? ([] as Row[])).push(row);
         });
@@ -205,18 +208,21 @@ function bucketDataByColumn(
     case "user":
       return Object.groupBy(rows, (row) => {
         const cell = row.cells.find((c) => c.columnId === column.id)!;
-        return cell.userValue ?? "other";
+        if (!cell) return "Unknown";
+        return cell.userValue ?? "Unknown";
       });
     case "text":
       return Object.groupBy(rows, (row) => {
         const cell = row.cells.find((c) => c.columnId === column.id)!;
-        return cell.textValue ?? "other";
+        if (!cell) return "Unknown";
+        return cell.textValue ?? "Unknown";
       });
     case "number":
       // not really supported but here anyway
       return Object.groupBy(rows, (row) => {
         const cell = row.cells.find((c) => c.columnId === column.id)!;
-        return String(cell.numberValue) ?? "other";
+        if (!cell) return "Unknown";
+        return String(cell.numberValue) ?? "Unknown";
       });
   }
 }
@@ -230,12 +236,10 @@ function BarVariant({
   className?: string;
 }) {
   const column = config.columns.find((c) => c.id === config.option1)!;
-  console.log("bar column", column);
   if (!column) {
     return <div className={styles.noData}>Missing column</div>;
   }
   const groups = bucketDataByColumn(config.rows, column, config.option3);
-  console.log("bar groups", groups);
   const chartConfig: ChartConfig = {};
   const chartData = Object.entries(groups).map(([label, rows], idx) => {
     if (!rows) {
@@ -259,10 +263,6 @@ function BarVariant({
       fill: `hsl(var(--chart-${idx + 1}))`,
     };
   });
-  console.log("bar chartData", chartData);
-  console.log("bar chartConfig", chartConfig);
-  console.log("BarChart", BarChart);
-  console.log("Bar", Bar);
   return (
     <ChartContainer
       config={chartConfig}
@@ -355,7 +355,7 @@ function DonutVariant({
   className,
   ...props
 }: {
-  config: Extract<ChartProps, { chartType: "donut" }>;
+  config: Extract<ChartProps, { chartType: "doughnut" }>;
   className?: string;
 }) {
   const column = config.columns.find((c) => c.id === config.option1)!;
@@ -449,7 +449,7 @@ function RadialVariant({
   className,
   ...props
 }: {
-  config: Extract<ChartProps, { chartType: "donut" }>;
+  config: Extract<ChartProps, { chartType: "doughnut" }>;
   className?: string;
 }) {
   const completedRowCount = config.rows.reduce((acc, row) => {
