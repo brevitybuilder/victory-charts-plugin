@@ -1,5 +1,6 @@
 .container {
   --chart-border-alpha: rgba(237, 242, 247, 0.5);
+  position: relative;
   display: flex;
   aspect-ratio: 16/9;
   justify-content: center;

@@ -34,43 +34,43 @@ import { getWeekNumber } from "./utils";
 
 export type Column =
   | {
+    id: string;
+    title: string;
+    type: "select";
+    options: {
       id: string;
       title: string;
-      type: "select";
-      options: {
-        id: string;
-        title: string;
-      }[];
-    }
+    }[];
+  }
   | {
-      id: string;
-      title: string;
-      type: "date";
-    }
+    id: string;
+    title: string;
+    type: "date";
+  }
   | {
+    id: string;
+    title: string;
+    type: "multiSelect";
+    options: {
       id: string;
       title: string;
-      type: "multiSelect";
-      options: {
-        id: string;
-        title: string;
-      }[];
-    }
+    }[];
+  }
   | {
-      id: string;
-      title: string;
-      type: "user";
-    }
+    id: string;
+    title: string;
+    type: "user";
+  }
   | {
-      id: string;
-      title: string;
-      type: "text";
-    }
+    id: string;
+    title: string;
+    type: "text";
+  }
   | {
-      id: string;
-      title: string;
-      type: "number";
-    };
+    id: string;
+    title: string;
+    type: "number";
+  };
 
 export type Cell = {
   id: string;
@@ -90,48 +90,65 @@ export type Row = {
   complete: boolean;
 };
 
+export type Filter = {
+  columnId: string;
+  operator: "=" | "!=" | ">" | "<" | ">=" | "<=" | "includes";
+  textValue: string | null;
+  numberValue: number | null;
+  dateValue: string | null;
+  selectValue: string | null;
+  userValue: string | null;
+  mutliSelectValue: string[] | null;
+};
+
 export type ChartProps =
   | {
-      chartType: "bar";
-      columns: Column[];
-      rows: Row[]; // raw values (index matches columns)
-      option1: string; // x-axis (colummns)
-      option2: "count" | "percentage"; // y-axis (
-      option3?: "week" | "month" | "year"; // if x-axis is date, then this is the date grouping
-    }
+    chartType: "bar";
+    columns: Column[];
+    rows: Row[]; // raw values (index matches columns)
+    filters?: Filter[];
+    option1: string; // x-axis (colummns)
+    option2: "count" | "percentage"; // y-axis (
+    option3?: "week" | "month" | "year"; // if x-axis is date, then this is the date grouping
+  }
   | {
-      chartType: "line";
-      columns: Column[];
-      rows: Row[];
-      option1: "date"; // x-axis (colummns)
-      option2: "count" | "percentage"; // y-axis (
-      option3: "week" | "month" | "year";
-    }
+    chartType: "line";
+    columns: Column[];
+    rows: Row[];
+    filters?: Filter[];
+    option1: "date"; // x-axis (colummns)
+    option2: "count" | "percentage"; // y-axis (
+    option3: "week" | "month" | "year";
+  }
   | {
-      chartType: "doughnut";
-      columns: Column[];
-      rows: Row[];
-      option1: string; // label
-    }
+    chartType: "doughnut";
+    columns: Column[];
+    filters?: Filter[];
+    rows: Row[];
+    option1: string; // label
+  }
   | {
-      chartType: "radar";
-      columns: Column[];
-      rows: Row[];
-      option1: string; // primary grouping (axis)
-      option2: string; // secondary grouping (axis) (used by drill)
-    }
+    chartType: "radar";
+    columns: Column[];
+    filters?: Filter[];
+    rows: Row[];
+    option1: string; // primary grouping (axis)
+    option2: string; // secondary grouping (axis) (used by drill)
+  }
   | {
-      chartType: "polar";
-      columns: Column[];
-      rows: Row[];
-      option1: string; // primary grouping (axis)
-      option2: string; // secondary grouping (axis) (used by drill)
-    }
+    chartType: "polar";
+    columns: Column[];
+    filters?: Filter[];
+    rows: Row[];
+    option1: string; // primary grouping (axis)
+    option2: string; // secondary grouping (axis) (used by drill)
+  }
   | {
-      chartType: "radial";
-      columns: Column[];
-      rows: Row[];
-    };
+    chartType: "radial";
+    columns: Column[];
+    filters?: Filter[];
+    rows: Row[];
+  };
 
 export function Chart({ config, ...props }: { config: ChartProps }) {
   console.log("victory-chart", config);
@@ -156,6 +173,99 @@ export function Chart({ config, ...props }: { config: ChartProps }) {
       console.error("Unknown chart type", config);
       return null;
   }
+}
+
+function getCellValue(cell: Cell, type: Column["type"]) {
+  switch (type) {
+    case "select":
+      return cell.selectValue;
+    case "date":
+      return new Date(cell.dateValue ?? 0).getTime();
+    case "multiSelect":
+      return cell.mutliSelectValue;
+    case "user":
+      return cell.userValue;
+    case "text":
+      return cell.textValue;
+    case "number":
+      return cell.numberValue;
+    default:
+      return null;
+  }
+}
+
+function getFilterValue(cell: Filter, type: Column["type"]) {
+  switch (type) {
+    case "select":
+      return cell.mutliSelectValue;
+    case "date":
+      return new Date(cell.dateValue ?? 0).getTime();
+    case "multiSelect":
+      return cell.mutliSelectValue;
+    case "user":
+      return cell.userValue;
+    case "text":
+      return cell.textValue;
+    case "number":
+      return cell.numberValue;
+    default:
+      return null;
+  }
+}
+
+function filterData(rows: Row[], columns: Column[], filters?: Filter[]) {
+  if (!filters?.length) return rows;
+  const columnTypesById = columns.reduce(
+    (acc, column) => {
+      acc[column.id] = column.type;
+      return acc;
+    },
+    {} as Record<string, Column["type"]>,
+  );
+  return rows.filter((row) => {
+    return filters.every((filter) => {
+      const columnType = columnTypesById[filter.columnId] ?? "text";
+      const cell = row.cells.find((c) => c.columnId === filter.columnId);
+      if (!cell) return false;
+      const cellValue = getCellValue(cell, columnType);
+      const filterValue = getFilterValue(filter, columnType);
+      switch (filter.operator ?? "=") {
+        case "=":
+          if (Array.isArray(filterValue) && Array.isArray(cellValue)) {
+            return (
+              (filterValue as string[]).some((value) =>
+                (cellValue as string[])?.includes(value),
+              ) || false
+            );
+          } else if (Array.isArray(cellValue)) {
+            return (
+              (cellValue as string[])?.includes(filterValue as string) || false
+            );
+          } else if (Array.isArray(filterValue)) {
+            return (
+              (filterValue as string[])?.includes(cellValue as string) || false
+            );
+          }
+          return cellValue === filterValue;
+        case "!=":
+          return cellValue !== filterValue;
+        case ">":
+          return cellValue! > filterValue!;
+        case "<":
+          return cellValue! < filterValue!;
+        case ">=":
+          return cellValue! >= filterValue!;
+        case "<=":
+          return cellValue! <= filterValue!;
+        case "includes":
+          return (
+            (cellValue as string)?.includes(filterValue as string) || false
+          );
+        default:
+          return false;
+      }
+    });
+  });
 }
 
 function bucketDataByColumn(
@@ -186,9 +296,8 @@ function bucketDataByColumn(
             const [year, week] = getWeekNumber(new Date(cell.dateValue!));
             return `${year}-${week}`;
           case "month":
-            return `${new Date(cell.dateValue!).getUTCFullYear()}-${
-              new Date(cell.dateValue!).getUTCMonth() + 1
-            }`;
+            return `${new Date(cell.dateValue!).getUTCFullYear()}-${new Date(cell.dateValue!).getUTCMonth() + 1
+              }`;
           case "year":
             return new Date(cell.dateValue!).getUTCFullYear();
           default:
@@ -239,7 +348,8 @@ function BarVariant({
   if (!column) {
     return <div className={styles.noData}>Missing column</div>;
   }
-  const groups = bucketDataByColumn(config.rows, column, config.option3);
+  const filteredRows = filterData(config.rows, config.columns, config.filters);
+  const groups = bucketDataByColumn(filteredRows, column, config.option3);
   const chartConfig: ChartConfig = {};
   const chartData = Object.entries(groups).map(([label, rows], idx) => {
     if (!rows) {
@@ -259,7 +369,7 @@ function BarVariant({
         config.option2 === "count"
           ? rows.length
           : rows?.reduce((acc, row) => (row.complete ? acc + 1 : acc), 0) /
-            rows.length,
+          rows.length,
       fill: `hsl(var(--chart-${idx + 1}))`,
     };
   });
@@ -301,7 +411,8 @@ function LineVariant({
   if (!column) {
     return <div className={styles.noData}>Missing column</div>;
   }
-  const groups = bucketDataByColumn(config.rows, column, config.option3);
+  const filteredRows = filterData(config.rows, config.columns, config.filters);
+  const groups = bucketDataByColumn(filteredRows, column, config.option3);
   const chartData = Object.entries(groups).map(([key, rows]) => {
     return {
       x: key,
@@ -362,7 +473,8 @@ function DonutVariant({
   if (!column) {
     return <div className={styles.noData}>Missing column</div>;
   }
-  const groups = bucketDataByColumn(config.rows, column, config.option3);
+  const filteredRows = filterData(config.rows, config.columns, config.filters);
+  const groups = bucketDataByColumn(filteredRows, column, config.option3);
   const chartConfig: ChartConfig = {};
   const chartData = Object.entries(groups).map(([label, rows], idx) => {
     if (!rows) {
@@ -379,7 +491,7 @@ function DonutVariant({
     return {
       label,
       value: rows.length,
-      percent: (rows.length / config.rows.length) * 100,
+      percent: (rows.length / filteredRows.length) * 100,
       fill: `hsl(var(--chart-${idx + 1}))`,
     };
   });
@@ -452,13 +564,14 @@ function RadialVariant({
   config: Extract<ChartProps, { chartType: "doughnut" }>;
   className?: string;
 }) {
-  const completedRowCount = config.rows.reduce((acc, row) => {
+  const filteredRows = filterData(config.rows, config.columns, config.filters);
+  const completedRowCount = filteredRows.reduce((acc, row) => {
     if (row.complete) {
       return acc + 1;
     }
     return acc;
   }, 0);
-  const percentCompleted = completedRowCount / config.rows.length;
+  const percentCompleted = completedRowCount / filteredRows.length;
   const chartData = [
     {
       label: "Percent completed",
@@ -536,11 +649,24 @@ function RadarVariant({
   config: Extract<ChartProps, { chartType: "radar" }>;
   className?: string;
 }) {
+  const [selectedBucket, setSelectedBucket] = React.useState<string | null>(null);
   const column = config.columns.find((c) => c.id === config.option1)!;
   if (!column) {
     return <div className={styles.noData}>Missing column</div>;
   }
-  const groups = bucketDataByColumn(config.rows, column, "year");
+  const filteredRows = filterData(config.rows, config.columns, config.filters);
+  let groups = bucketDataByColumn(filteredRows, column, "year");
+  if (selectedBucket) {
+    groups = bucketDataByColumn(groups[selectedBucket]!, config.columns.find((c) => c.id === config.option2)!, "year");
+  }
+  if (!groups) {
+    if (selectedBucket) {
+      return (
+        <div className={styles.noData} onClick={() => setSelectedBucket(null)}>No data. Click to go back.</div>
+      )
+    }
+    return <div className={styles.noData}>No data</div>;
+  }
   const chartConfig: ChartConfig = {};
   const chartData = Object.entries(groups).map(([label, rows], idx) => {
     if (!rows) {
@@ -565,6 +691,9 @@ function RadarVariant({
       config={chartConfig}
       className={clsx(styles.chart, styles.square)}
     >
+      {selectedBucket ? (
+        <BackButton onClick={() => setSelectedBucket(null)} />
+      ) : null}
       <RadarChart data={chartData}>
         <ChartTooltip cursor={false} content={<ChartTooltipContent />} />
         <PolarAngleAxis dataKey="label" />
@@ -576,6 +705,12 @@ function RadarVariant({
           dot={{
             r: 4,
             fillOpacity: 1,
+          }}
+          activeDot={{
+            onClick: (_, payload) => {
+              if (selectedBucket) return
+              setSelectedBucket(payload?.payload?.label)
+            },
           }}
         />
       </RadarChart>
@@ -592,16 +727,30 @@ function PolarVariant({
   config: Extract<ChartProps, { chartType: "polar" }>;
   className?: string;
 }) {
+  const [selectedBucket, setSelectedBucket] = React.useState<string | null>(null);
   const column = config.columns.find((c) => c.id === config.option1)!;
   if (!column) {
     return <div className={styles.noData}>Missing column</div>;
   }
-  const groups = bucketDataByColumn(config.rows, column, config.option3);
+  const filteredRows = filterData(config.rows, config.columns, config.filters);
+  let groups = bucketDataByColumn(filteredRows, column, config.option3);
+  if (selectedBucket) {
+    groups = bucketDataByColumn(groups[selectedBucket]!, config.columns.find((c) => c.id === config.option2)!, config.option3);
+  }
+  if (!groups) {
+    if (selectedBucket) {
+      return (
+        <div className={styles.noData} onClick={() => setSelectedBucket(null)}>No data. Click to go back.</div>
+      )
+    }
+    return <div className={styles.noData}>No data</div>;
+  }
   const chartConfig: ChartConfig = {};
   const chartData = Object.entries(groups).map(([label, rows], idx) => {
     if (!rows) {
       return {
         label,
+        id: label,
         value: 0,
         fill: `hsl(var(--chart-${idx + 1}))`,
       };
@@ -626,6 +775,9 @@ function PolarVariant({
       className={clsx(styles.chart, className)}
       {...props}
     >
+      {selectedBucket ? (
+        <BackButton onClick={() => setSelectedBucket(null)} />
+      ) : null}
       <PieChart data={chartData}>
         <ChartTooltip
           cursor={false}
@@ -648,6 +800,10 @@ function PolarVariant({
                 key={entry.label}
                 fill={entry.fill}
                 outerRadius={entry.outerRadius}
+                onClick={() => {
+                  if (selectedBucket) return
+                  setSelectedBucket(entry.label);
+                }}
               />
             );
           })}
@@ -655,4 +811,22 @@ function PolarVariant({
       </PieChart>
     </ChartContainer>
   );
+}
+
+function BackButton({ onClick }: { onClick: () => void }) {
+  return <button className={
+    styles.backButton
+  } onClick={onClick}
+    aria-label="Back"
+  >
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      fill="currentColor"
+      viewBox="0 -960 960 960"
+    >
+      <path d="M360-240L120-480l240-240 56 56-144 144h568v80H272l144 144-56 56z"></path>
+    </svg>
+  </button>
 }

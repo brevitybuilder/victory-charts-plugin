@@ -52,6 +52,12 @@
             "$ref": "victory-chart|Row"
           }
         },
+        "filters": {
+          "type": "array",
+          "items": {
+            "$ref": "victory-chart|Filter"
+          }
+        },
         "option1": {
           "type": "string"
         },
@@ -106,6 +112,41 @@
         }
       },
       "required": ["id", "boolean"]
+    },
+    {
+      "$schema": "http://json-schema.org/draft-04/schema#",
+      "id": "Filter",
+      "type": "object",
+      "properties": {
+        "columnId": {
+          "type": "string"
+        },
+        "operator": {
+          "type": "string"
+        },
+        "textValue": {
+          "type": "string"
+        },
+        "numberValue": {
+          "type": "number"
+        },
+        "dateValue": {
+          "type": "string"
+        },
+        "selectValue": {
+          "type": "string"
+        },
+        "userValue": {
+          "type": "string"
+        },
+        "multiSelectValue": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": ["columnId", "operator"]
     },
     {
       "$schema": "http://json-schema.org/draft-04/schema#",
