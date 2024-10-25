@@ -107,6 +107,7 @@
   justify-content: space-between;
   line-height: 1;
   align-items: center;
+  gap: 0.375rem;
 }
 .tooltipContent[data-nested="true"] {
   align-items: flex-end;

@@ -29,6 +29,30 @@
       },
       "sources": [],
       "actions": []
+    },
+    {
+      "name": "DoughnutChart",
+      "entrypoint": "./blocks/doughnut-chart/index.tsx",
+      "acceptsChildren": false,
+      "category": "Charts",
+      "props": [
+        {
+          "label": "Data",
+          "name": "data",
+          "type": { "kind": "victory-chart|ChartData", "isList": true },
+          "default": null,
+          "placeholder": "...",
+          "help": "The data prop"
+        }
+      ],
+      "events": [],
+      "defaultStyles": {
+        "": {
+          "width": "100%"
+        }
+      },
+      "sources": [],
+      "actions": []
     }
   ],
   "schemas": [
@@ -199,6 +223,23 @@
         }
       },
       "required": ["id", "title"]
+    },
+    {
+      "$schema": "http://json-schema.org/draft-04/schema#",
+      "id": "ChartData",
+      "type": "object",
+      "properties": {
+        "label": {
+          "type": "string"
+        },
+        "value": {
+          "type": "number"
+        },
+        "fill": {
+          "type": "string"
+        }
+      },
+      "required": ["label", "value", "fill"]
     }
   ],
   "serverActions": []
