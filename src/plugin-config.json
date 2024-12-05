@@ -108,6 +108,9 @@
         "type": {
           "type": "string"
         },
+        "isStatus": {
+          "type": "boolean"
+        },
         "options": {
           "type": "array",
           "items": {

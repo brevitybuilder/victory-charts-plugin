@@ -37,6 +37,7 @@ export type Column =
       id: string;
       title: string;
       type: "select";
+      isStatus?: boolean;
       options: {
         id: string;
         title: string;
@@ -80,6 +81,7 @@ export type Cell = {
   numberValue: number | null;
   dateValue: string | null;
   selectValue: string | null;
+  statusValue: string | null;
   userValue: string | null;
   mutliSelectValue: string[] | null;
 };
@@ -87,7 +89,7 @@ export type Cell = {
 export type Row = {
   id: string;
   cells: Cell[];
-  complete: boolean;
+  // complete: boolean;
 };
 
 export type Filter = {
@@ -126,6 +128,7 @@ export type ChartProps =
       filters?: Filter[];
       rows: Row[];
       option1: string; // label
+      option3: "week" | "month" | "year";
     }
   | {
       chartType: "radar";
@@ -142,6 +145,7 @@ export type ChartProps =
       rows: Row[];
       option1: string; // primary grouping (axis)
       option2: string; // secondary grouping (axis) (used by drill)
+      option3: "week" | "month" | "year"; //not used?
     }
   | {
       chartType: "radial";
@@ -149,6 +153,14 @@ export type ChartProps =
       filters?: Filter[];
       rows: Row[];
     };
+
+function rowIsCompleted(row: Row, columns: Column[]): boolean {
+  const statusColumn = columns.find((c) => c.type === "select" && c.isStatus);
+  if (!statusColumn) return false;
+  const cell = row.cells.find((c) => c.columnId === statusColumn.id);
+  if (!cell) return false;
+  return cell.statusValue === "C79zikw8f3HPM9Qiien4a";
+}
 
 export function Chart({ config, ...props }: { config: ChartProps }) {
   console.log("victory-chart", config);
@@ -302,7 +314,7 @@ function bucketDataByColumn(
           case "year":
             return new Date(cell.dateValue!).getUTCFullYear();
           default:
-            return cell.dateValue;
+            return cell.dateValue as string;
         }
       });
     case "multiSelect":
@@ -369,8 +381,11 @@ function BarVariant({
       value:
         config.option2 === "count"
           ? rows.length
-          : rows?.reduce((acc, row) => (row.complete ? acc + 1 : acc), 0) /
-            rows.length,
+          : rows?.reduce(
+              (acc, row) =>
+                rowIsCompleted(row, config.columns) ? acc + 1 : acc,
+              0,
+            ) / rows.length,
       fill: `hsl(var(--chart-${idx + 1}))`,
     };
   });
@@ -562,12 +577,12 @@ function RadialVariant({
   className,
   ...props
 }: {
-  config: Extract<ChartProps, { chartType: "doughnut" }>;
+  config: Extract<ChartProps, { chartType: "radial" }>;
   className?: string;
 }) {
   const filteredRows = filterData(config.rows, config.columns, config.filters);
   const completedRowCount = filteredRows.reduce((acc, row) => {
-    if (row.complete) {
+    if (rowIsCompleted(row, config.columns)) {
       return acc + 1;
     }
     return acc;
@@ -696,7 +711,12 @@ function RadarVariant({
     };
   });
   return (
-    <ChartContainer config={chartConfig} className={clsx(styles.chart)}>
+    // @ts-ignore
+    <ChartContainer
+      config={chartConfig}
+      className={clsx(styles.chart, className)}
+      {...props}
+    >
       {selectedBucket ? (
         <BackButton onClick={() => setSelectedBucket(null)} />
       ) : null}
@@ -715,7 +735,7 @@ function RadarVariant({
           activeDot={{
             onClick: (_, payload) => {
               if (selectedBucket) return;
-              setSelectedBucket(payload?.payload?.label);
+              setSelectedBucket((payload as any)?.payload?.label);
             },
           }}
         />
@@ -774,8 +794,10 @@ function PolarVariant({
       color: `hsl(var(--chart-${idx + 1}))`,
     };
     const percenetComplete =
-      rows?.reduce((acc, row) => (row.complete ? acc + 1 : acc), 0) /
-      rows.length;
+      rows?.reduce(
+        (acc, row) => (rowIsCompleted(row, config.columns) ? acc + 1 : acc),
+        0,
+      ) / rows.length;
     return {
       label,
       value: rows.length,
@@ -784,6 +806,7 @@ function PolarVariant({
     };
   });
   return (
+    // @ts-ignore
     <ChartContainer
       config={chartConfig}
       className={clsx(styles.chart, className)}
@@ -813,6 +836,7 @@ function PolarVariant({
               <Cell
                 key={entry.label}
                 fill={entry.fill}
+                // @ts-ignore
                 outerRadius={entry.outerRadius}
                 onClick={() => {
                   if (selectedBucket) return;

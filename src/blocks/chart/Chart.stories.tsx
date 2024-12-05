@@ -1,3 +1,5 @@
+// @ts-nocheck
+
 import type { Meta, StoryObj } from "@storybook/react";
 
 import { Chart } from ".";
@@ -468,7 +470,7 @@ export const Radar: Story = {
               id: "date",
               title: "Date",
               type: "date",
-            }
+            },
           ],
           rows: [
             {
