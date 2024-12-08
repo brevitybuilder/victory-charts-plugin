@@ -37,11 +37,16 @@ export type Column =
       id: string;
       title: string;
       type: "select";
-      isStatus?: boolean;
       options: {
         id: string;
         title: string;
       }[];
+    }
+  | {
+      id: string;
+      title: string;
+      type: "status";
+      isStatus?: boolean;
     }
   | {
       id: string;
@@ -75,6 +80,7 @@ export type Column =
 
 export type Cell = {
   id: string;
+  createdAt: string;
   rowId: string;
   columnId: string;
   textValue: string | null;
@@ -89,7 +95,7 @@ export type Cell = {
 export type Row = {
   id: string;
   cells: Cell[];
-  // complete: boolean;
+  statusCells: Cell[];
 };
 
 export type Filter = {
@@ -100,7 +106,13 @@ export type Filter = {
   dateValue: string | null;
   selectValue: string | null;
   userValue: string | null;
+  statusValue: string | null;
   mutliSelectValue: string[] | null;
+};
+
+export type Status = {
+  id: string;
+  title: string;
 };
 
 export type ChartProps =
@@ -109,6 +121,8 @@ export type ChartProps =
       columns: Column[];
       rows: Row[]; // raw values (index matches columns)
       filters?: Filter[];
+      statusById: Record<string, string>;
+      userById: Record<string, string>;
       option1: string; // x-axis (colummns)
       option2: "count" | "percentage"; // y-axis (
       option3?: "week" | "month" | "year"; // if x-axis is date, then this is the date grouping
@@ -118,6 +132,8 @@ export type ChartProps =
       columns: Column[];
       rows: Row[];
       filters?: Filter[];
+      statusById: Record<string, string>;
+      userById: Record<string, string>;
       option1: "date"; // x-axis (colummns)
       option2: "count" | "percentage"; // y-axis (
       option3: "week" | "month" | "year";
@@ -126,6 +142,8 @@ export type ChartProps =
       chartType: "doughnut";
       columns: Column[];
       filters?: Filter[];
+      statusById: Record<string, string>;
+      userById: Record<string, string>;
       rows: Row[];
       option1: string; // label
       option3: "week" | "month" | "year";
@@ -134,6 +152,8 @@ export type ChartProps =
       chartType: "radar";
       columns: Column[];
       filters?: Filter[];
+      statusById: Record<string, string>;
+      userById: Record<string, string>;
       rows: Row[];
       option1: string; // primary grouping (axis)
       option2: string; // secondary grouping (axis) (used by drill)
@@ -142,6 +162,8 @@ export type ChartProps =
       chartType: "polar";
       columns: Column[];
       filters?: Filter[];
+      statusById: Record<string, string>;
+      userById: Record<string, string>;
       rows: Row[];
       option1: string; // primary grouping (axis)
       option2: string; // secondary grouping (axis) (used by drill)
@@ -150,21 +172,81 @@ export type ChartProps =
   | {
       chartType: "radial";
       columns: Column[];
+      statusById: Record<string, string>;
+      userById: Record<string, string>;
       filters?: Filter[];
       rows: Row[];
     };
 
-function rowIsCompleted(row: Row, columns: Column[]): boolean {
-  const statusColumn = columns.find((c) => c.type === "select" && c.isStatus);
-  if (!statusColumn) return false;
-  const cell = row.cells.find((c) => c.columnId === statusColumn.id);
+const COMPLETE_STATUS = "C79zikw8f3HPM9Qiien4a";
+const INCOMPLETE_STATUS = "KQCXxinM46CFcrtiqJyUm";
+const IN_PROGRESS_STATUS = "y6VAKbHHdVxznKwq9Tz7r";
+const NA_STATUS = "nGb3y8EWNbExDPbX8thjc";
+function rowIsCompleted(row: Row, asOfDate?: Date): boolean {
+  const cell = asOfDate
+    ? row.statusCells.find((sc) => {
+        const createdAt = new Date(sc.createdAt!);
+        return createdAt.getTime() <= asOfDate.getTime();
+      })
+    : row.statusCells.at(0);
   if (!cell) return false;
-  return cell.statusValue === "C79zikw8f3HPM9Qiien4a";
+  switch (cell.statusValue) {
+    case INCOMPLETE_STATUS:
+      return false;
+    case IN_PROGRESS_STATUS:
+      const statusCellIdx = row.statusCells.findIndex(
+        (sc) => sc.id === cell.id,
+      );
+      if (statusCellIdx === -1) return true; // this should never happen
+      const nextStatusCell = row.statusCells[statusCellIdx + 1];
+      if (!nextStatusCell) return false;
+      if ([COMPLETE_STATUS, NA_STATUS].includes(nextStatusCell.statusValue!))
+        return true;
+      return false;
+    default:
+      return true;
+  }
 }
 
-export function Chart({ config, ...props }: { config: ChartProps }) {
-  console.log("victory-chart", config);
-  if (!config) return null;
+function chartColorIdx(idx: number) {
+  return (idx % 10) + 1;
+}
+
+export function Chart({
+  config,
+  statuses = [],
+  users = [],
+  playbookCreatedAt,
+  ...props
+}: {
+  config: ChartProps;
+  statuses: Status[];
+  users: Status[];
+  playbookCreatedAt: Date;
+}) {
+  console.log("victory-chart", config, statuses);
+  config.statusById = React.useMemo(() => {
+    return (
+      statuses?.reduce(
+        (memo, status) => {
+          memo[status.id] = status.title;
+          return memo;
+        },
+        {} as Record<string, string>,
+      ) ?? {}
+    );
+  }, [statuses.length]);
+  config.userById = React.useMemo(() => {
+    return (
+      users?.reduce(
+        (memo, user) => {
+          memo[user.id] = user.title;
+          return memo;
+        },
+        {} as Record<string, string>,
+      ) ?? {}
+    );
+  }, [users.length]);
   if (!config.rows?.length || !config.columns?.length) {
     return <div className={styles.noData}>No data</div>;
   }
@@ -172,7 +254,13 @@ export function Chart({ config, ...props }: { config: ChartProps }) {
     case "bar":
       return <BarVariant config={config} {...props} />;
     case "line":
-      return <LineVariant config={config} {...props} />;
+      return (
+        <LineVariant
+          config={config}
+          playbookCreatedAt={playbookCreatedAt}
+          {...props}
+        />
+      );
     case "doughnut":
       return <DonutVariant config={config} {...props} />;
     case "radar":
@@ -187,7 +275,12 @@ export function Chart({ config, ...props }: { config: ChartProps }) {
   }
 }
 
-function getCellValue(cell: Cell, type: Column["type"]) {
+function getCellValue(
+  cell: Cell,
+  type: Column["type"],
+  statusById: Record<string, string> = {},
+  userById: Record<string, string> = {},
+) {
   switch (type) {
     case "select":
       return cell.selectValue;
@@ -196,40 +289,56 @@ function getCellValue(cell: Cell, type: Column["type"]) {
     case "multiSelect":
       return cell.mutliSelectValue;
     case "user":
-      return cell.userValue;
+      return userById[cell.userValue!] ?? cell.userValue ?? "Unassigned";
     case "text":
       return cell.textValue;
     case "number":
       return cell.numberValue;
+    case "status":
+      return statusById[cell.statusValue!] ?? cell.statusValue;
     default:
       return null;
   }
 }
 
-function getFilterValue(cell: Filter, type: Column["type"]) {
+function getFilterValue(
+  cell: Filter,
+  type: Column["type"],
+  statusById: Record<string, string> = {},
+  userById: Record<string, string> = {},
+) {
   switch (type) {
     case "select":
-      return cell.mutliSelectValue;
+      return cell.selectValue;
     case "date":
       return new Date(cell.dateValue ?? 0).getTime();
     case "multiSelect":
       return cell.mutliSelectValue;
     case "user":
-      return cell.userValue;
+      return userById[cell.userValue!] ?? cell.userValue ?? "Unassigned";
     case "text":
       return cell.textValue;
     case "number":
       return cell.numberValue;
+    case "status":
+      return statusById[cell.statusValue!] ?? cell.statusValue;
     default:
       return null;
   }
 }
 
-function filterData(rows: Row[], columns: Column[], filters?: Filter[]) {
+function filterData(
+  rows: Row[],
+  columns: Column[],
+  filters: Filter[] | undefined,
+  statusById: Record<string, string> = {},
+  userById: Record<string, string> = {},
+) {
   if (!filters?.length) return rows;
   const columnTypesById = columns.reduce(
     (acc, column) => {
-      acc[column.id] = column.type;
+      acc[column.id] =
+        column.type === "status" && column.isStatus ? "status" : column.type;
       return acc;
     },
     {} as Record<string, Column["type"]>,
@@ -239,8 +348,13 @@ function filterData(rows: Row[], columns: Column[], filters?: Filter[]) {
       const columnType = columnTypesById[filter.columnId] ?? "text";
       const cell = row.cells.find((c) => c.columnId === filter.columnId);
       if (!cell) return false;
-      const cellValue = getCellValue(cell, columnType);
-      const filterValue = getFilterValue(filter, columnType);
+      const cellValue = getCellValue(cell, columnType, statusById, userById);
+      const filterValue = getFilterValue(
+        filter,
+        columnType,
+        statusById,
+        userById,
+      );
       switch (filter.operator ?? "=") {
         case "=":
           if (Array.isArray(filterValue) && Array.isArray(cellValue)) {
@@ -280,10 +394,146 @@ function filterData(rows: Row[], columns: Column[], filters?: Filter[]) {
   });
 }
 
+type PeriodType = "week" | "month" | "year";
+
+interface Period {
+  start: Date;
+  end: Date;
+}
+
+function alignStartDate(date: Date, periodType: PeriodType): Date {
+  const aligned = new Date(date.getTime());
+
+  switch (periodType) {
+    case "week":
+      // Weeks start on Monday (day 1)
+      // getDay() returns 0 (Sun),1(Mon),2(Tue),3(Wed),4(Thu),5(Fri),6(Sat)
+      // To get Monday, we find how many days we need to go back:
+      // If day = 0 (Sun), go back 6 days
+      // If day = 1 (Mon), go back 0 days
+      // If day = 2 (Tue), go back 1 day, etc.
+      const dayOfWeek = aligned.getDay();
+      const offset = (dayOfWeek + 6) % 7; // number of days to go back to get Monday
+      aligned.setDate(aligned.getDate() - offset);
+      break;
+    case "month":
+      // Align to the 1st of the month
+      aligned.setDate(1);
+      break;
+    case "year":
+      // Align to Jan 1 of that year
+      aligned.setMonth(0); // January
+      aligned.setDate(1);
+      break;
+  }
+
+  return aligned;
+}
+
+function alignEndDate(date: Date, periodType: PeriodType): Date {
+  const aligned = new Date(date.getTime());
+
+  switch (periodType) {
+    case "week":
+      // Weeks end on Sunday
+      // If day = 0 (Sun), go forward 0 days
+      // If day = 1 (Mon), go forward 6 days
+      // If day = 2 (Tue), go forward 5 days, etc.
+      const dayOfWeek = aligned.getDay();
+      const forwardOffset = (7 - dayOfWeek) % 7;
+      aligned.setDate(aligned.getDate() + forwardOffset);
+      break;
+    case "month":
+      // Align to the last day of that month
+      // Move to the next month at the 1st, then go back one day
+      aligned.setMonth(aligned.getMonth() + 1, 1);
+      aligned.setDate(aligned.getDate() - 1);
+      break;
+    case "year":
+      // Align to Dec 31 of that year
+      aligned.setMonth(11, 31); // December is month 11, day 31
+      break;
+  }
+
+  return aligned;
+}
+
+function nextPeriodStart(date: Date, periodType: PeriodType): Date {
+  const nextStart = new Date(date.getTime());
+  switch (periodType) {
+    case "week":
+      // Next period starts the day after the current Sunday
+      nextStart.setDate(nextStart.getDate() + 1);
+      break;
+    case "month":
+      // Next period starts on the 1st of the next month
+      nextStart.setMonth(nextStart.getMonth() + 1, 1);
+      break;
+    case "year":
+      // Next period starts on Jan 1 of the next year
+      nextStart.setFullYear(nextStart.getFullYear() + 1, 0, 1);
+      break;
+  }
+  return nextStart;
+}
+
+function periodEnd(date: Date, periodType: PeriodType): Date {
+  const currentEnd = new Date(date.getTime());
+  switch (periodType) {
+    case "week":
+      // end = start + 6 days (Monday-based week)
+      currentEnd.setDate(currentEnd.getDate() + 6);
+      break;
+    case "month":
+      // end = last day of the month starting from `date`
+      // To find the last day of the month:
+      currentEnd.setMonth(currentEnd.getMonth() + 1, 1);
+      currentEnd.setDate(currentEnd.getDate() - 1);
+      break;
+    case "year":
+      // end = Dec 31 of that year
+      currentEnd.setMonth(11, 31);
+      break;
+  }
+  return currentEnd;
+}
+
+function generatePeriods(
+  startDate: Date,
+  endDate: Date,
+  periodType: PeriodType,
+): Period[] {
+  // Align the provided start and end to full periods
+  const adjustedStart = alignStartDate(startDate, periodType);
+  const adjustedEnd = alignEndDate(endDate, periodType);
+
+  const periods: Period[] = [];
+
+  let currentStart = new Date(adjustedStart.getTime());
+  while (currentStart <= adjustedEnd) {
+    let currentEnd = periodEnd(currentStart, periodType);
+    if (currentEnd > adjustedEnd) {
+      currentEnd = new Date(adjustedEnd.getTime());
+    }
+
+    periods.push({
+      start: new Date(currentStart.getTime()),
+      end: new Date(currentEnd.getTime()),
+    });
+
+    // Move to the next period start
+    currentStart = nextPeriodStart(currentEnd, periodType);
+  }
+
+  return periods;
+}
+
 function bucketDataByColumn(
   rows: Row[],
   column: Column,
-  dateGrouping?: "week" | "month" | "year",
+  dateGrouping: PeriodType | undefined,
+  statusById: Record<string, string>,
+  userById: Record<string, string>,
 ) {
   switch (column?.type) {
     case "select":
@@ -330,8 +580,8 @@ function bucketDataByColumn(
     case "user":
       return Object.groupBy(rows, (row) => {
         const cell = row.cells.find((c) => c.columnId === column.id)!;
-        if (!cell) return "Unknown";
-        return cell.userValue ?? "Unknown";
+        if (!cell) return "Unassigned";
+        return userById[cell.userValue!] ?? cell.userValue ?? "Unassigned";
       });
     case "text":
       return Object.groupBy(rows, (row) => {
@@ -345,6 +595,13 @@ function bucketDataByColumn(
         const cell = row.cells.find((c) => c.columnId === column.id)!;
         if (!cell) return "Unknown";
         return String(cell.numberValue) ?? "Unknown";
+      });
+    case "status":
+      // not really supported but here anyway
+      return Object.groupBy(rows, (row) => {
+        const cell = row.cells.find((c) => c.columnId === column.id)!;
+        if (!cell) return "No status";
+        return statusById[cell.statusValue!] ?? "No status";
       });
   }
 }
@@ -361,32 +618,44 @@ function BarVariant({
   if (!column) {
     return <div className={styles.noData}>Missing column</div>;
   }
-  const filteredRows = filterData(config.rows, config.columns, config.filters);
-  const groups = bucketDataByColumn(filteredRows, column, config.option3);
+  const filteredRows = filterData(
+    config.rows,
+    config.columns,
+    config.filters,
+    config.statusById,
+    config.userById,
+  );
+  const groups = bucketDataByColumn(
+    filteredRows,
+    column,
+    config.option3,
+    config.statusById,
+    config.userById,
+  );
   const chartConfig: ChartConfig = {};
   const chartData = Object.entries(groups).map(([label, rows], idx) => {
     if (!rows) {
       return {
         label,
         value: 0,
-        fill: `hsl(var(--chart-${idx + 1}))`,
+        fill: `var(--chart-${chartColorIdx(idx)})`,
       };
     }
     chartConfig[label] = {
       label: label,
-      color: `hsl(var(--chart-${idx + 1}))`,
+      color: `var(--chart-${chartColorIdx(idx)})`,
     };
+    const countCompleted = rows?.reduce(
+      (acc, row) => (rowIsCompleted(row) ? acc + 1 : acc),
+      0,
+    );
     return {
       label,
       value:
         config.option2 === "count"
-          ? rows.length
-          : rows?.reduce(
-              (acc, row) =>
-                rowIsCompleted(row, config.columns) ? acc + 1 : acc,
-              0,
-            ) / rows.length,
-      fill: `hsl(var(--chart-${idx + 1}))`,
+          ? countCompleted
+          : (countCompleted / filteredRows.length) * 100,
+      fill: `var(--chart-${chartColorIdx(idx)})`,
     };
   });
   return (
@@ -415,9 +684,11 @@ function BarVariant({
 function LineVariant({
   config,
   className,
+  playbookCreatedAt,
   ...props
 }: {
   config: Extract<ChartProps, { chartType: "line" }>;
+  playbookCreatedAt: Date;
   className?: string;
 }) {
   const column = config.columns.find((c) => c.id === config.option1) as Extract<
@@ -427,18 +698,35 @@ function LineVariant({
   if (!column) {
     return <div className={styles.noData}>Missing column</div>;
   }
-  const filteredRows = filterData(config.rows, config.columns, config.filters);
-  const groups = bucketDataByColumn(filteredRows, column, config.option3);
-  const chartData = Object.entries(groups).map(([key, rows]) => {
+  const filteredRows = filterData(
+    config.rows,
+    config.columns,
+    config.filters,
+    config.statusById,
+    config.userById,
+  );
+  const periods = generatePeriods(
+    playbookCreatedAt,
+    new Date(),
+    config.option3,
+  );
+  const chartData = periods.map((period) => {
+    const countCompleted = filteredRows.reduce((acc, row) => {
+      const isCompleted = rowIsCompleted(row, period.end);
+      return isCompleted ? acc + 1 : acc;
+    }, 0);
     return {
-      x: key,
-      y: rows?.length ?? 0,
+      x: formatDate(period.start),
+      y:
+        config.option2 === "count"
+          ? countCompleted
+          : (countCompleted / filteredRows.length) * 100,
     };
   });
   const chartConfig = {
     y: {
       label: column.title,
-      color: "hsl(var(--chart-1))",
+      color: "var(--chart-1)",
     },
   } satisfies ChartConfig;
   return (
@@ -456,7 +744,14 @@ function LineVariant({
         }}
       >
         <CartesianGrid vertical={false} />
-        <XAxis dataKey="x" tickLine={false} tickMargin={8} axisLine={false} />
+        <XAxis
+          dataKey="x"
+          tickLine={false}
+          tickMargin={8}
+          axisLine={false}
+          angle={-45}
+          textAnchor="end"
+        />
         <YAxis
           axisLine={false}
           tickLine={false}
@@ -489,26 +784,38 @@ function DonutVariant({
   if (!column) {
     return <div className={styles.noData}>Missing column</div>;
   }
-  const filteredRows = filterData(config.rows, config.columns, config.filters);
-  const groups = bucketDataByColumn(filteredRows, column, config.option3);
+  const filteredRows = filterData(
+    config.rows,
+    config.columns,
+    config.filters,
+    config.statusById,
+    config.userById,
+  );
+  const groups = bucketDataByColumn(
+    filteredRows,
+    column,
+    config.option3,
+    config.statusById,
+    config.userById,
+  );
   const chartConfig: ChartConfig = {};
   const chartData = Object.entries(groups).map(([label, rows], idx) => {
     if (!rows) {
       return {
         label,
         value: 0,
-        fill: `hsl(var(--chart-${idx + 1}))`,
+        fill: `var(--chart-${chartColorIdx(idx)})`,
       };
     }
     chartConfig[label] = {
       label: label,
-      color: `hsl(var(--chart-${idx + 1}))`,
+      color: `var(--chart-${chartColorIdx(idx)})`,
     };
     return {
       label,
       value: rows.length,
       percent: (rows.length / filteredRows.length) * 100,
-      fill: `hsl(var(--chart-${idx + 1}))`,
+      fill: `var(--chart-${chartColorIdx(idx)})`,
     };
   });
   return (
@@ -580,19 +887,22 @@ function RadialVariant({
   config: Extract<ChartProps, { chartType: "radial" }>;
   className?: string;
 }) {
-  const filteredRows = filterData(config.rows, config.columns, config.filters);
+  const filteredRows = filterData(
+    config.rows,
+    config.columns,
+    config.filters,
+    config.statusById,
+    config.userById,
+  );
   const completedRowCount = filteredRows.reduce((acc, row) => {
-    if (rowIsCompleted(row, config.columns)) {
-      return acc + 1;
-    }
-    return acc;
+    return rowIsCompleted(row) ? acc + 1 : acc;
   }, 0);
-  const percentCompleted = completedRowCount / filteredRows.length;
+  const percentCompleted = (completedRowCount / filteredRows.length) * 100;
   const chartData = [
     {
       label: "Percent completed",
       value: completedRowCount,
-      fill: "hsl(var(--chart-1))",
+      fill: "var(--chart-1)",
     },
   ];
   const chartConfig = {
@@ -672,13 +982,27 @@ function RadarVariant({
   if (!column) {
     return <div className={styles.noData}>Missing column</div>;
   }
-  const filteredRows = filterData(config.rows, config.columns, config.filters);
-  let groups = bucketDataByColumn(filteredRows, column, "year");
+  const filteredRows = filterData(
+    config.rows,
+    config.columns,
+    config.filters,
+    config.statusById,
+    config.userById,
+  );
+  let groups = bucketDataByColumn(
+    filteredRows,
+    column,
+    "year",
+    config.statusById,
+    config.userById,
+  );
   if (selectedBucket) {
     groups = bucketDataByColumn(
       groups[selectedBucket]!,
       config.columns.find((c) => c.id === config.option2)!,
       "year",
+      config.statusById,
+      config.userById,
     );
   }
   if (!groups) {
@@ -697,17 +1021,17 @@ function RadarVariant({
       return {
         label,
         value: 0,
-        fill: `hsl(var(--chart-${idx + 1}))`,
+        fill: `var(--chart-${chartColorIdx(idx)})`,
       };
     }
     chartConfig[label] = {
       label: label,
-      color: `hsl(var(--chart-${idx + 1}))`,
+      color: `var(--chart-${chartColorIdx(idx)})`,
     };
     return {
       label,
       value: rows.length,
-      fill: `hsl(var(--chart-${idx + 1}))`,
+      fill: `var(--chart-${chartColorIdx(idx)})`,
     };
   });
   return (
@@ -760,13 +1084,27 @@ function PolarVariant({
   if (!column) {
     return <div className={styles.noData}>Missing column</div>;
   }
-  const filteredRows = filterData(config.rows, config.columns, config.filters);
-  let groups = bucketDataByColumn(filteredRows, column, config.option3);
+  const filteredRows = filterData(
+    config.rows,
+    config.columns,
+    config.filters,
+    config.statusById,
+    config.userById,
+  );
+  let groups = bucketDataByColumn(
+    filteredRows,
+    column,
+    config.option3,
+    config.statusById,
+    config.userById,
+  );
   if (selectedBucket) {
     groups = bucketDataByColumn(
       groups[selectedBucket]!,
       config.columns.find((c) => c.id === config.option2)!,
       config.option3,
+      config.statusById,
+      config.userById,
     );
   }
   if (!groups) {
@@ -786,23 +1124,22 @@ function PolarVariant({
         label,
         id: label,
         value: 0,
-        fill: `hsl(var(--chart-${idx + 1}))`,
+        fill: `var(--chart-${chartColorIdx(idx)})`,
       };
     }
     chartConfig[label] = {
       label: label,
-      color: `hsl(var(--chart-${idx + 1}))`,
+      color: `var(--chart-${chartColorIdx(idx)})`,
     };
-    const percenetComplete =
-      rows?.reduce(
-        (acc, row) => (rowIsCompleted(row, config.columns) ? acc + 1 : acc),
-        0,
-      ) / rows.length;
+    const countComplete = filteredRows?.reduce(
+      (acc, row) => (rowIsCompleted(row) ? acc + 1 : acc),
+      0,
+    );
     return {
       label,
-      value: rows.length,
-      outerRadius: percenetComplete,
-      fill: `hsl(var(--chart-${idx + 1}))`,
+      value: countComplete,
+      outerRadius: countComplete / filteredRows.length,
+      fill: `var(--chart-${chartColorIdx(idx)})`,
     };
   });
   return (
@@ -865,4 +1202,12 @@ function BackButton({ onClick }: { onClick: () => void }) {
       </svg>
     </button>
   );
+}
+
+function formatDate(date: Date): string {
+  const month = (date.getMonth() + 1).toString().padStart(2, "0");
+  const day = date.getDate().toString().padStart(2, "0");
+  const year = date.getFullYear().toString();
+
+  return `${month}/${day}/${year}`;
 }

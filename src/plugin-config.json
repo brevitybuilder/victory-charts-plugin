@@ -19,6 +19,30 @@
           "default": null,
           "placeholder": "...",
           "help": "The config prop"
+        },
+        {
+          "label": "Statuses",
+          "name": "statuses",
+          "type": { "kind": "victory-chart|Option", "isList": true },
+          "default": null,
+          "placeholder": "...",
+          "help": "The statuses prop"
+        },
+        {
+          "label": "Users",
+          "name": "users",
+          "type": { "kind": "victory-chart|Option", "isList": true },
+          "default": null,
+          "placeholder": "...",
+          "help": "The users prop"
+        },
+        {
+          "label": "playbook created date",
+          "name": "playbookCreatedAt",
+          "type": { "kind": "date", "isDynamic": true },
+          "default": null,
+          "placeholder": "...",
+          "help": "Playbook created at"
         }
       ],
       "events": [],
@@ -128,10 +152,13 @@
         "id": {
           "type": "string"
         },
-        "complete": {
-          "type": "boolean"
-        },
         "cells": {
+          "type": "array",
+          "items": {
+            "$ref": "victory-chart|Cell"
+          }
+        },
+        "statusCells": {
           "type": "array",
           "items": {
             "$ref": "victory-chart|Cell"
@@ -163,6 +190,9 @@
         "selectValue": {
           "type": "string"
         },
+        "statusValue": {
+          "type": "string"
+        },
         "userValue": {
           "type": "string"
         },
@@ -183,6 +213,9 @@
         "id": {
           "type": "string"
         },
+        "createdAt": {
+          "type": "date"
+        },
         "rowId": {
           "type": "string"
         },
@@ -199,6 +232,9 @@
           "type": "string"
         },
         "selectValue": {
+          "type": "string"
+        },
+        "statusValue": {
           "type": "string"
         },
         "userValue": {

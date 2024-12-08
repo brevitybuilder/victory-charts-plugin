@@ -1,9 +1,14 @@
 :root {
-  --chart-1: 12 76% 61%;
-  --chart-2: 173 58% 39%;
-  --chart-3: 197 37% 24%;
-  --chart-4: 43 74% 66%;
-  --chart-5: 27 87% 67%;
+  --chart-1: #4e79a7; /* Blue */
+  --chart-2: #f28e2c; /* Orange */
+  --chart-3: #e15759; /* Red */
+  --chart-4: #76b7b2; /* Teal */
+  --chart-5: #59a14f; /* Green */
+  --chart-6: #edc949; /* Yellow */
+  --chart-7: #af7aa1; /* Purple */
+  --chart-8: #ff9da7; /* Pink */
+  --chart-9: #9c755f; /* Brown */
+  --chart-10: #bab0ab; /* Gray */
 }
 
 .chart {
