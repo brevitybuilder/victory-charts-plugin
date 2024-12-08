@@ -1155,9 +1155,49 @@ function PolarVariant({
       <PieChart data={chartData}>
         <ChartTooltip
           cursor={false}
-          content={<ChartTooltipContent hideLabel />}
+          content={
+            <ChartTooltipContent
+              hideLabel
+              formatter={(value, name, item, _idx, payload) => {
+                return (
+                  <>
+                    <div
+                      className={clsx(
+                        commonStyles.tooltipIndicator,
+                        commonStyles.dot,
+                      )}
+                      style={
+                        {
+                          "--color-bg": item.payload.fill,
+                          "--color-border": item.payload.fill,
+                        } as React.CSSProperties
+                      }
+                    />
+                    <div
+                      className={commonStyles.tooltipContent}
+                      style={{
+                        minWidth: "100px",
+                      }}
+                    >
+                      <div className={commonStyles.tooltipContentInner}>
+                        <span className={commonStyles.tooltipContentInner}>
+                          {name}
+                        </span>
+                      </div>
+                      {value && (
+                        <span className={commonStyles.tooltipContentValue}>
+                          {value} (
+                          {(payload as any)?.payload?.percent?.toFixed(2)}
+                          %)
+                        </span>
+                      )}
+                    </div>
+                  </>
+                );
+              }}
+            />
+          }
         />
-
         <PolarGrid gridType="circle" />
         <Pie
           data={chartData}

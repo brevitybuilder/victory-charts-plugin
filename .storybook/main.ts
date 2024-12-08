@@ -12,9 +12,9 @@ const config: StorybookConfig = {
     name: "@storybook/react-vite",
     options: {},
   },
-  docs: {
-    autodocs: "tag",
-  },
+  // docs: {
+  //   autodocs: "tag",
+  // },
   async viteFinal(config) {
     // Merge custom configuration into the default config
     return mergeConfig(config, {

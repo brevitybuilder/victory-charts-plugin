@@ -19,6 +19,7 @@ export const Demo: Story = {
           rows: [
             {
               id: "bK7zYtcWTdpmp3ztkCN3H",
+              statusCells: [],
               cells: [
                 {
                   id: "yQMwxXcdNidKCPJxBNTjU",
@@ -36,6 +37,7 @@ export const Demo: Story = {
             },
             {
               id: "QEMfCDTjFhjWH6JG7Pg4h",
+              statusCells: [],
               cells: [
                 {
                   id: "h8FgMndbwHF7zx936fXkd",
@@ -53,6 +55,7 @@ export const Demo: Story = {
             },
             {
               id: "nAF93ReRc6Vyrdw9rbbAX",
+              statusCells: [],
               cells: [
                 {
                   id: "LVmb6EqLTjnndwBXxCtLg",
@@ -121,6 +124,7 @@ export const Bar: Story = {
           rows: [
             {
               id: "1",
+              statusCells: [],
               cells: [
                 {
                   id: "1",
@@ -138,6 +142,7 @@ export const Bar: Story = {
             },
             {
               id: "2",
+              statusCells: [],
               cells: [
                 {
                   id: "3",
@@ -155,6 +160,7 @@ export const Bar: Story = {
             },
             {
               id: "3",
+              statusCells: [],
               cells: [
                 {
                   id: "1",
@@ -195,6 +201,7 @@ export const Line: Story = {
           rows: [
             {
               id: "1",
+              statusCells: [],
               cells: [
                 {
                   id: "1",
@@ -212,6 +219,7 @@ export const Line: Story = {
             },
             {
               id: "2",
+              statusCells: [],
               cells: [
                 {
                   id: "3",
@@ -229,6 +237,7 @@ export const Line: Story = {
             },
             {
               id: "3",
+              statusCells: [],
               cells: [
                 {
                   id: "1",
@@ -288,6 +297,7 @@ export const Donut: Story = {
           rows: [
             {
               id: "1",
+              statusCells: [],
               cells: [
                 {
                   id: "1",
@@ -305,6 +315,7 @@ export const Donut: Story = {
             },
             {
               id: "2",
+              statusCells: [],
               cells: [
                 {
                   id: "3",
@@ -322,6 +333,7 @@ export const Donut: Story = {
             },
             {
               id: "3",
+              statusCells: [],
               cells: [
                 {
                   id: "1",
@@ -380,6 +392,7 @@ export const Radial: Story = {
           rows: [
             {
               id: "1",
+              statusCells: [],
               cells: [
                 {
                   id: "1",
@@ -397,6 +410,7 @@ export const Radial: Story = {
             },
             {
               id: "2",
+              statusCells: [],
               cells: [
                 {
                   id: "3",
@@ -414,6 +428,7 @@ export const Radial: Story = {
             },
             {
               id: "3",
+              statusCells: [],
               cells: [
                 {
                   id: "1",
@@ -475,6 +490,7 @@ export const Radar: Story = {
           rows: [
             {
               id: "1",
+              statusCells: [],
               cells: [
                 {
                   id: "1",
@@ -503,6 +519,7 @@ export const Radar: Story = {
             },
             {
               id: "2",
+              statusCells: [],
               cells: [
                 {
                   id: "3",
@@ -531,6 +548,7 @@ export const Radar: Story = {
             },
             {
               id: "3",
+              statusCells: [],
               cells: [
                 {
                   id: "1",
@@ -559,6 +577,7 @@ export const Radar: Story = {
             },
             {
               id: "4",
+              statusCells: [],
               cells: [
                 {
                   id: "1",
@@ -633,6 +652,7 @@ export const Polar: Story = {
           rows: [
             {
               id: "1",
+              statusCells: [],
               cells: [
                 {
                   id: "1",
@@ -661,6 +681,7 @@ export const Polar: Story = {
             },
             {
               id: "2",
+              statusCells: [],
               cells: [
                 {
                   id: "3",
@@ -689,6 +710,7 @@ export const Polar: Story = {
             },
             {
               id: "3",
+              statusCells: [],
               cells: [
                 {
                   id: "1",
