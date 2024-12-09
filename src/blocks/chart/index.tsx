@@ -1131,17 +1131,20 @@ function PolarVariant({
       label: label,
       color: `var(--chart-${chartColorIdx(idx)})`,
     };
-    const countComplete = filteredRows?.reduce(
+    const countComplete = rows?.reduce(
       (acc, row) => (rowIsCompleted(row) ? acc + 1 : acc),
       0,
     );
     return {
       label,
-      value: countComplete,
-      outerRadius: countComplete / filteredRows.length,
+      value: (rows.length / filteredRows.length) * 100,
+      percent: (countComplete / rows.length) * 100,
+      outerRadius: countComplete / rows.length,
       fill: `var(--chart-${chartColorIdx(idx)})`,
     };
   });
+  console.log("polar groups", groups);
+  console.log("polar chartData", chartData);
   return (
     // @ts-ignore
     <ChartContainer
@@ -1186,9 +1189,9 @@ function PolarVariant({
                       </div>
                       {value && (
                         <span className={commonStyles.tooltipContentValue}>
-                          {value} (
-                          {(payload as any)?.payload?.percent?.toFixed(2)}
-                          %)
+                          {value?.toFixed(2)}% (
+                          {(payload as any)?.payload?.percent?.toFixed(2)}%
+                          completed)
                         </span>
                       )}
                     </div>

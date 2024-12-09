@@ -18,12 +18,12 @@
   "dependencies": {
     "@brevity-builder/react": "^1.2.207",
     "clsx": "^2.1.1",
-    "react": "19.0.0-rc-cc1ec60d0d-20240607",
-    "react-dom": "19.0.0-rc-cc1ec60d0d-20240607",
-    "react-is": "19.0.0-rc-cc1ec60d0d-20240607",
-    "recharts": "^2.13.3",
+    "react": "19.0.0",
+    "react-dom": "19.0.0",
+    "react-is": "19.0.0",
+    "recharts": "^2.14.1",
     "vitest": "^2.1.8",
-    "zustand": "4.5.5"
+    "zustand": "5.0.2"
   },
   "devDependencies": {
     "@brevity-builder/cli": "^1.2.185",
