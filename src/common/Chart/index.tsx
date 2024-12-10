@@ -2,6 +2,7 @@ import cn from "clsx";
 import * as React from "react";
 import * as RechartsPrimitive from "recharts";
 
+import { ValueType } from "recharts/types/component/DefaultTooltipContent";
 import * as styles from "./styles.module.css";
 
 // Format: { THEME_NAME: CSS_SELECTOR }
@@ -107,6 +108,7 @@ const ChartTooltipContent = React.forwardRef<
       indicator?: "line" | "dot" | "dashed";
       nameKey?: string;
       labelKey?: string;
+      valueFormatter?: (value: ValueType) => string;
     }
 >(
   (
@@ -121,6 +123,7 @@ const ChartTooltipContent = React.forwardRef<
       labelFormatter,
       labelClassName,
       formatter,
+      valueFormatter,
       color,
       nameKey,
       labelKey,
@@ -181,7 +184,6 @@ const ChartTooltipContent = React.forwardRef<
             const key = `${nameKey ?? item.name ?? item.dataKey ?? "value"}`;
             const itemConfig = getPayloadConfigFromPayload(config, item, key);
             const indicatorColor = color || item.payload.fill || item.color;
-
             return (
               <div
                 key={item.dataKey}
@@ -227,7 +229,9 @@ const ChartTooltipContent = React.forwardRef<
                       </div>
                       {item.value && (
                         <span className={styles.tooltipContentValue}>
-                          {item.value.toLocaleString()}
+                          {valueFormatter
+                            ? valueFormatter(item.value)
+                            : item.value.toLocaleString()}
                         </span>
                       )}
                     </div>

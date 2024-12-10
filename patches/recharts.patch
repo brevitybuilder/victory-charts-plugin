@@ -8,7 +8,7 @@ index 0e4dc0a9fc6baa233c6903d1b5a1b8d545e32932..a17574b015a20d3bd9e06d1904ecaf94
          payload: entry,
 -        paddingAngle: mathSign(deltaAngle) * paddingAngle
 +        paddingAngle: mathSign(deltaAngle) * paddingAngle,
-+        outerRadius: entry.outerRadius ? coordinate.outerRadius * entry.outerRadius : coordinate.outerRadius
++        outerRadius: entry.outerRadius != null ? coordinate.outerRadius * entry.outerRadius : coordinate.outerRadius
        });
        return prev;
      });

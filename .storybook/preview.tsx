@@ -15,7 +15,14 @@ const preview: Preview = {
     (Story) => {
       const useStore = createStore({});
       return (
-        <div style={{ padding: "32px" }}>
+        <div
+          style={{
+            padding: "32px",
+            height: "100vh",
+            display: "flex",
+            flexDirection: "column",
+          }}
+        >
           <link
             rel="stylesheet"
             href="https://staging.brevity.io/api/v1/code/org_27kgBQ65xoatIHxBg5EL0gfjigx/mp1epttdz1hgqcwe8rx52/dev/theme"

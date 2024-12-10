@@ -16,7 +16,7 @@
     "build-storybook": "storybook build"
   },
   "dependencies": {
-    "@brevity-builder/react": "^1.2.207",
+    "@brevity-builder/react": "^1.2.214",
     "clsx": "^2.1.1",
     "react": "19.0.0",
     "react-dom": "19.0.0",
@@ -37,10 +37,10 @@
     "@storybook/react-vite": "^8.4.7",
     "@storybook/test": "^8.4.7",
     "@types/react": "^19.0.1",
-    "@types/react-dom": "^19.0.1",
+    "@types/react-dom": "^19.0.2",
     "@vitejs/plugin-react": "^4.3.4",
     "esbuild-css-modules-plugin": "^3.1.2",
-    "oxlint": "^0.14.1",
+    "oxlint": "^0.15.0",
     "plop": "^4.0.1",
     "storybook": "^8.4.7",
     "typescript": "^5.7.2",

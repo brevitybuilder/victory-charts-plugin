@@ -634,7 +634,7 @@ function BarVariant({
   );
   const chartConfig: ChartConfig = {};
   const chartData = Object.entries(groups).map(([label, rows], idx) => {
-    if (!rows) {
+    if (!rows || !rows.length) {
       return {
         label,
         value: 0,
@@ -649,12 +649,17 @@ function BarVariant({
       (acc, row) => (rowIsCompleted(row) ? acc + 1 : acc),
       0,
     );
+    const column = config.columns.find((c) => c.id === config.option1)!;
     return {
       label,
       value:
-        config.option2 === "count"
-          ? countCompleted
-          : (countCompleted / filteredRows.length) * 100,
+        column?.type === "status"
+          ? config.option2 === "count"
+            ? rows.length
+            : (rows.length / filteredRows.length) * 100
+          : config.option2 === "count"
+            ? rows.length
+            : (countCompleted / rows.length) * 100,
       fill: `var(--chart-${chartColorIdx(idx)})`,
     };
   });
@@ -667,13 +672,26 @@ function BarVariant({
       <BarChart accessibilityLayer data={chartData}>
         <CartesianGrid vertical={false} />
         <XAxis
+          name={config.option2 === "count" ? "Count" : "% Completed"}
           dataKey={"label"}
           tickLine={false}
           tickMargin={10}
           axisLine={false}
+          angle={-45}
+          textAnchor="end"
         />
         <YAxis axisLine={false} tickLine={false} tickMargin={10} />
-        <ChartTooltip content={<ChartTooltipContent />} />
+        <ChartTooltip
+          content={
+            <ChartTooltipContent
+              valueFormatter={(v) =>
+                config.option2 === "count"
+                  ? v.toLocaleString()
+                  : `${(v as number).toFixed(1)}%`
+              }
+            />
+          }
+        />
         <ChartLegend content={<ChartLegendContent />} />
         <Bar dataKey={"value"} radius={4} />
       </BarChart>
@@ -691,13 +709,6 @@ function LineVariant({
   playbookCreatedAt: Date;
   className?: string;
 }) {
-  const column = config.columns.find((c) => c.id === config.option1) as Extract<
-    Column,
-    { type: "date" }
-  >;
-  if (!column) {
-    return <div className={styles.noData}>Missing column</div>;
-  }
   const filteredRows = filterData(
     config.rows,
     config.columns,
@@ -725,7 +736,7 @@ function LineVariant({
   });
   const chartConfig = {
     y: {
-      label: column.title,
+      label: config.option2 === "count" ? "Completed" : "% Completed",
       color: "var(--chart-1)",
     },
   } satisfies ChartConfig;
@@ -758,7 +769,18 @@ function LineVariant({
           tickMargin={10}
           tickCount={5}
         />
-        <ChartTooltip content={<ChartTooltipContent />} cursor={false} />
+        <ChartTooltip
+          content={
+            <ChartTooltipContent
+              valueFormatter={(value) =>
+                config.option2 === "count"
+                  ? value.toLocaleString()
+                  : `${(value as number).toFixed(1)}%`
+              }
+            />
+          }
+          cursor={false}
+        />
         <ChartLegend content={<ChartLegendContent />} />
         <Line
           dataKey="y"
@@ -856,7 +878,7 @@ function DonutVariant({
                   </div>
                   {value && (
                     <span className={commonStyles.tooltipContentValue}>
-                      {value} ({(payload as any)?.payload?.percent?.toFixed(2)}
+                      {value} ({(payload as any)?.payload?.percent?.toFixed(1)}
                       %)
                     </span>
                   )}
@@ -897,7 +919,7 @@ function RadialVariant({
   const completedRowCount = filteredRows.reduce((acc, row) => {
     return rowIsCompleted(row) ? acc + 1 : acc;
   }, 0);
-  const percentCompleted = (completedRowCount / filteredRows.length) * 100;
+  const percentCompleted = completedRowCount / filteredRows.length;
   const chartData = [
     {
       label: "Percent completed",
@@ -1021,6 +1043,7 @@ function RadarVariant({
       return {
         label,
         value: 0,
+        name: "% Complete",
         fill: `var(--chart-${chartColorIdx(idx)})`,
       };
     }
@@ -1028,9 +1051,13 @@ function RadarVariant({
       label: label,
       color: `var(--chart-${chartColorIdx(idx)})`,
     };
+    const countComplete = rows?.reduce((acc, row) => {
+      return rowIsCompleted(row) ? acc + 1 : acc;
+    }, 0);
     return {
       label,
-      value: rows.length,
+      name: "% Complete",
+      value: (countComplete / rows.length) * 100,
       fill: `var(--chart-${chartColorIdx(idx)})`,
     };
   });
@@ -1045,10 +1072,18 @@ function RadarVariant({
         <BackButton onClick={() => setSelectedBucket(null)} />
       ) : null}
       <RadarChart data={chartData}>
-        <ChartTooltip cursor={false} content={<ChartTooltipContent />} />
+        <ChartTooltip
+          cursor={false}
+          content={
+            <ChartTooltipContent
+              valueFormatter={(value) => `${(value as number).toFixed(1)}%`}
+            />
+          }
+        />
         <PolarAngleAxis dataKey="label" />
         <PolarGrid />
         <Radar
+          name="% Complete"
           dataKey="value"
           fill="var(--color-value)"
           fillOpacity={0.6}
@@ -1119,11 +1154,13 @@ function PolarVariant({
   }
   const chartConfig: ChartConfig = {};
   const chartData = Object.entries(groups).map(([label, rows], idx) => {
-    if (!rows) {
+    if (!rows || !rows.length) {
       return {
         label,
         id: label,
         value: 0,
+        percent: 0,
+        outerRadius: 0,
         fill: `var(--chart-${chartColorIdx(idx)})`,
       };
     }
@@ -1189,8 +1226,8 @@ function PolarVariant({
                       </div>
                       {value && (
                         <span className={commonStyles.tooltipContentValue}>
-                          {value?.toFixed(2)}% (
-                          {(payload as any)?.payload?.percent?.toFixed(2)}%
+                          {value?.toFixed(1)}% (
+                          {(payload as any)?.payload?.percent?.toFixed(1)}%
                           completed)
                         </span>
                       )}
@@ -1217,7 +1254,7 @@ function PolarVariant({
                 key={entry.label}
                 fill={entry.fill}
                 // @ts-ignore
-                outerRadius={entry.outerRadius}
+                outerRadius={entry.outerRadius ?? 0.001}
                 onClick={() => {
                   if (selectedBucket) return;
                   setSelectedBucket(entry.label);
@@ -1250,7 +1287,7 @@ function BackButton({ onClick }: { onClick: () => void }) {
 function formatDate(date: Date): string {
   const month = (date.getMonth() + 1).toString().padStart(2, "0");
   const day = date.getDate().toString().padStart(2, "0");
-  const year = date.getFullYear().toString();
+  const year = date.getFullYear().toString().slice(-2);
 
   return `${month}/${day}/${year}`;
 }
