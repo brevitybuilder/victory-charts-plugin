@@ -672,7 +672,6 @@ function BarVariant({
       <BarChart accessibilityLayer data={chartData}>
         <CartesianGrid vertical={false} />
         <XAxis
-          name={config.option2 === "count" ? "Count" : "% Completed"}
           dataKey={"label"}
           tickLine={false}
           tickMargin={10}
@@ -693,7 +692,11 @@ function BarVariant({
           }
         />
         <ChartLegend content={<ChartLegendContent />} />
-        <Bar dataKey={"value"} radius={4} />
+        <Bar
+          name={config.option2 === "count" ? "Count" : "% Completed"}
+          dataKey={"value"}
+          radius={4}
+        />
       </BarChart>
     </ChartContainer>
   );
