@@ -105,8 +105,6 @@ export type Filter = {
   numberValue: number | null;
   dateValue: string | null;
   selectValue: string | null;
-  userValue: string | null;
-  statusValue: string | null;
   mutliSelectValue: string[] | null;
 };
 
@@ -280,6 +278,7 @@ function getCellValue(
   type: Column["type"],
   statusById: Record<string, string> = {},
   userById: Record<string, string> = {},
+  rawValue?: boolean,
 ) {
   switch (type) {
     case "select":
@@ -289,24 +288,23 @@ function getCellValue(
     case "multiSelect":
       return cell.mutliSelectValue;
     case "user":
-      return userById[cell.userValue!] ?? cell.userValue ?? "Unassigned";
+      return rawValue
+        ? cell.userValue
+        : userById[cell.userValue!] ?? cell.userValue ?? "Unassigned";
     case "text":
       return cell.textValue;
     case "number":
       return cell.numberValue;
     case "status":
-      return statusById[cell.statusValue!] ?? cell.statusValue;
+      return rawValue
+        ? cell.statusValue
+        : statusById[cell.statusValue!] ?? cell.statusValue;
     default:
       return null;
   }
 }
 
-function getFilterValue(
-  cell: Filter,
-  type: Column["type"],
-  statusById: Record<string, string> = {},
-  userById: Record<string, string> = {},
-) {
+function getFilterValue(cell: Filter, type: Column["type"]) {
   switch (type) {
     case "select":
       return cell.selectValue;
@@ -315,13 +313,13 @@ function getFilterValue(
     case "multiSelect":
       return cell.mutliSelectValue;
     case "user":
-      return userById[cell.userValue!] ?? cell.userValue ?? "Unassigned";
+      return cell.mutliSelectValue;
     case "text":
       return cell.textValue;
     case "number":
       return cell.numberValue;
     case "status":
-      return statusById[cell.statusValue!] ?? cell.statusValue;
+      return cell.mutliSelectValue;
     default:
       return null;
   }
@@ -348,13 +346,14 @@ function filterData(
       const columnType = columnTypesById[filter.columnId] ?? "text";
       const cell = row.cells.find((c) => c.columnId === filter.columnId);
       if (!cell) return false;
-      const cellValue = getCellValue(cell, columnType, statusById, userById);
-      const filterValue = getFilterValue(
-        filter,
+      const cellValue = getCellValue(
+        cell,
         columnType,
         statusById,
         userById,
+        true,
       );
+      const filterValue = getFilterValue(filter, columnType);
       switch (filter.operator ?? "=") {
         case "=":
           if (Array.isArray(filterValue) && Array.isArray(cellValue)) {

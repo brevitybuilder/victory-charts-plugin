@@ -190,12 +190,6 @@
         "selectValue": {
           "type": "string"
         },
-        "statusValue": {
-          "type": "string"
-        },
-        "userValue": {
-          "type": "string"
-        },
         "multiSelectValue": {
           "type": "array",
           "items": {
