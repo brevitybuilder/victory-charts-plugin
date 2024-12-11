@@ -89,7 +89,7 @@ export type Cell = {
   selectValue: string | null;
   statusValue: string | null;
   userValue: string | null;
-  mutliSelectValue: string[] | null;
+  multiSelectValue: string[] | null;
 };
 
 export type Row = {
@@ -105,7 +105,7 @@ export type Filter = {
   numberValue: number | null;
   dateValue: string | null;
   selectValue: string | null;
-  mutliSelectValue: string[] | null;
+  multiSelectValue: string[] | null;
 };
 
 export type Status = {
@@ -286,7 +286,7 @@ function getCellValue(
     case "date":
       return new Date(cell.dateValue ?? 0).getTime();
     case "multiSelect":
-      return cell.mutliSelectValue;
+      return cell.multiSelectValue;
     case "user":
       return rawValue
         ? cell.userValue
@@ -311,15 +311,15 @@ function getFilterValue(cell: Filter, type: Column["type"]) {
     case "date":
       return new Date(cell.dateValue ?? 0).getTime();
     case "multiSelect":
-      return cell.mutliSelectValue;
+      return cell.multiSelectValue;
     case "user":
-      return cell.mutliSelectValue;
+      return cell.multiSelectValue;
     case "text":
       return cell.textValue;
     case "number":
       return cell.numberValue;
     case "status":
-      return cell.mutliSelectValue;
+      return cell.multiSelectValue;
     default:
       return null;
   }
@@ -571,7 +571,7 @@ function bucketDataByColumn(
       rows.forEach((row) => {
         const cell = row.cells.find((c) => c.columnId === column.id);
         if (!cell) return;
-        cell.mutliSelectValue?.forEach((value) => {
+        cell.multiSelectValue?.forEach((value) => {
           (groups[value] ?? ([] as Row[])).push(row);
         });
       });
@@ -1182,8 +1182,6 @@ function PolarVariant({
       fill: `var(--chart-${chartColorIdx(idx)})`,
     };
   });
-  console.log("polar groups", groups);
-  console.log("polar chartData", chartData);
   return (
     // @ts-ignore
     <ChartContainer
