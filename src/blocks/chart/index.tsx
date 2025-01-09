@@ -1161,6 +1161,7 @@ function PolarVariant({
         label,
         id: label,
         value: 0,
+        count: 0,
         percent: 0,
         outerRadius: 0,
         fill: `var(--chart-${chartColorIdx(idx)})`,
@@ -1177,7 +1178,8 @@ function PolarVariant({
     return {
       label,
       value: (rows.length / filteredRows.length) * 100,
-      percent: (countComplete / rows.length) * 100,
+      percent: (countComplete * 100) / rows.length,
+      count: rows.length,
       outerRadius: countComplete / rows.length,
       fill: `var(--chart-${chartColorIdx(idx)})`,
     };
@@ -1199,6 +1201,8 @@ function PolarVariant({
             <ChartTooltipContent
               hideLabel
               formatter={(value, name, item, _idx, payload) => {
+                const percent = (payload as any)?.payload?.percent;
+                const count = (payload as any)?.payload?.count;
                 return (
                   <>
                     <div
@@ -1226,9 +1230,9 @@ function PolarVariant({
                       </div>
                       {value && (
                         <span className={commonStyles.tooltipContentValue}>
-                          {value?.toFixed(1)}% (
-                          {(payload as any)?.payload?.percent?.toFixed(1)}%
-                          completed)
+                          {percent?.toFixed(1)}% (
+                          {count ? count : '0'}
+                          {count == 1 ? ' standard' : ' standards'})
                         </span>
                       )}
                     </div>
