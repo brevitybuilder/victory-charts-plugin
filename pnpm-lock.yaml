@@ -9,7 +9,7 @@ overrides:
 
 patchedDependencies:
   recharts:
-    hash: 6yv6x46744zdxfx6x2aquhzpfu
+    hash: ad361c018871bd744d04fd6e35b0792e2f4f61b129a4b4acc6997756031241da
     path: patches/recharts.patch
 
 importers:
@@ -33,7 +33,7 @@ importers:
         version: 19.0.0
       recharts:
         specifier: ^2.14.1
-        version: 2.14.1(patch_hash=6yv6x46744zdxfx6x2aquhzpfu)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
+        version: 2.14.1(patch_hash=ad361c018871bd744d04fd6e35b0792e2f4f61b129a4b4acc6997756031241da)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
       vitest:
         specifier: ^2.1.8
         version: 2.1.8(@types/node@22.8.7)(less@4.2.0)(lightningcss@1.27.0)(sass@1.75.0)(stylus@0.62.0)
@@ -9715,7 +9715,7 @@ snapshots:
     dependencies:
       decimal.js-light: 2.5.1
 
-  recharts@2.14.1(patch_hash=6yv6x46744zdxfx6x2aquhzpfu)(react-dom@19.0.0(react@19.0.0))(react@19.0.0):
+  recharts@2.14.1(patch_hash=ad361c018871bd744d04fd6e35b0792e2f4f61b129a4b4acc6997756031241da)(react-dom@19.0.0(react@19.0.0))(react@19.0.0):
     dependencies:
       clsx: 2.1.1
       eventemitter3: 4.0.7
