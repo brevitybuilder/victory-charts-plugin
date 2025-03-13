@@ -1,5 +1,6 @@
 import clsx from "clsx";
-import type * as React from "react";
+import * as React from "react";
+
 import { Legend, Pie, PieChart } from "recharts";
 import {
 	type ChartConfig,
@@ -21,6 +22,7 @@ interface Props extends React.HTMLAttributes<HTMLDivElement> {
 
 export function DoughnutChart({ data, className, ...props }: Props) {
 	const chartConfig: ChartConfig = {};
+	const [check, setCheck] = React.useState(false);
 	const totalValue = data.reduce((acc, datum) => acc + datum.value, 0);
 	const chartData = data.map((datum) => {
 		chartConfig[datum.label] = {
@@ -32,6 +34,10 @@ export function DoughnutChart({ data, className, ...props }: Props) {
 			percent: (datum.value / totalValue) * 100,
 		};
 	});
+
+	React.useEffect(() => {
+		setCheck(true);
+	}, []);
 	return (
 		<ChartContainer
 			config={chartConfig}
@@ -89,7 +95,6 @@ export function DoughnutChart({ data, className, ...props }: Props) {
 					innerRadius={60}
 					strokeWidth={5}
 				/>
-				<Legend verticalAlign="middle" align="right" />
 			</PieChart>
 		</ChartContainer>
 	);

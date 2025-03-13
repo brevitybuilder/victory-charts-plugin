@@ -28,6 +28,7 @@ import {
 	ChartLegendContent,
 	ChartTooltip,
 	ChartTooltipContent,
+	useChart,
 } from "../../common/Chart";
 import * as commonStyles from "../../common/Chart/styles.module.css";
 import * as styles from "./styles.module.css";
@@ -1119,10 +1120,31 @@ function PolarVariant({
 	const [selectedBucket, setSelectedBucket] = React.useState<string | null>(
 		null,
 	);
+	const ref = React.useRef();
+	const [dimensions, setDimensions] = React.useState({ width: 0, height: 0 });
 	const column = config.columns.find((c) => c.id === config.option1)!;
+
+	React.useEffect(() => {
+		const node: HTMLElement = ref.current as any;
+		if (!node) return;
+
+		const observer = new ResizeObserver((entries) => {
+			entries.forEach((entry) => {
+				setDimensions({
+					width: entry.contentRect.width,
+					height: entry.contentRect.height,
+				});
+			});
+		});
+
+		observer.observe(node);
+		return () => observer.unobserve(node);
+	}, [ref]);
+
 	if (!column) {
 		return <div className={styles.noData}>Missing column</div>;
 	}
+
 	const filteredRows = filterData(
 		config.rows,
 		config.columns,
@@ -1184,17 +1206,24 @@ function PolarVariant({
 			fill: `var(--chart-${chartColorIdx(idx)})`,
 		};
 	});
+
+	const centerX = dimensions.width / 2;
+	const centerY = dimensions.height / 2;
+	console.log(centerX, centerY);
 	return (
 		// @ts-ignore
 		<ChartContainer
 			config={chartConfig}
 			className={clsx(styles.chart, className)}
+			width={dimensions.width}
+			height={dimensions.height}
+			ref={ref}
 			{...props}
 		>
 			{selectedBucket ? (
 				<BackButton onClick={() => setSelectedBucket(null)} />
 			) : null}
-			<PieChart data={chartData}>
+			<PieChart data={chartData} margin={{ right: 5 }}>
 				<ChartTooltip
 					cursor={false}
 					content={
@@ -1240,7 +1269,7 @@ function PolarVariant({
 						/>
 					}
 				/>
-				<PolarGrid gridType="circle" />
+				<PolarGrid cx={centerX} cy={centerY} gridType="circle" />
 				<Pie
 					data={chartData}
 					dataKey="value"
@@ -1248,6 +1277,8 @@ function PolarVariant({
 					strokeWidth={5}
 					startAngle={90}
 					endAngle={-270}
+					cx={centerX}
+					cy={centerY}
 				>
 					{chartData.map((entry, idx) => {
 						return (

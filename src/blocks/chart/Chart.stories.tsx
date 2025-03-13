@@ -80,7 +80,7 @@ export const Radar: Story = {
 
 export const Polar: Story = {
 	render: () => (
-		<div style={{ height: "500px", width: "100vh" }}>
+		<div style={{ height: "500px", width: "500px", overflow: "scroll" }}>
 			<Chart
 				config={{
 					chartType: "polar",
