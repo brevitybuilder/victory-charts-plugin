@@ -32,7 +32,7 @@ export type ChartProps =
 			cells: KPICell[];
 			startDate: Date;
 			endDate: Date;
-			option3: "week" | "month" | "year";
+			option3: "week" | "month" | "quarter" | "year";
 			type: "cumulative" | "periodic";
 	  };
 
@@ -51,7 +51,7 @@ export function ChartKPI({
 	/>)
 }
 
-type PeriodType = "week" | "month" | "year";
+type PeriodType = "week" | "month" | "quarter" | "year";
 
 interface Period {
 	start: Date;
@@ -76,6 +76,12 @@ function alignStartDate(date: Date, periodType: PeriodType): Date {
 		case "month":
 			// Align to the 1st of the month
 			aligned.setDate(1);
+			break;
+		case "quarter":
+			// Align to the first day of the current quarter
+			const currentMonth = aligned.getMonth();
+			const quarterStartMonth = Math.floor(currentMonth / 3) * 3;
+			aligned.setMonth(quarterStartMonth, 1);
 			break;
 		case "year":
 			// Align to Jan 1 of that year
@@ -106,6 +112,13 @@ function alignEndDate(date: Date, periodType: PeriodType): Date {
 			aligned.setMonth(aligned.getMonth() + 1, 1);
 			aligned.setDate(aligned.getDate() - 1);
 			break;
+		case "quarter":
+			// Align to the last day of the current quarter
+			const currentMonth = aligned.getMonth();
+			const quarterEndMonth = Math.floor(currentMonth / 3) * 3 + 2;
+			aligned.setMonth(quarterEndMonth + 1, 1);
+			aligned.setDate(aligned.getDate() - 1);
+			break;
 		case "year":
 			// Align to Dec 31 of that year
 			aligned.setMonth(11, 31); // December is month 11, day 31
@@ -125,6 +138,12 @@ function nextPeriodStart(date: Date, periodType: PeriodType): Date {
 		case "month":
 			// Next period starts on the 1st of the next month
 			nextStart.setMonth(nextStart.getMonth() + 1, 1);
+			break;
+		case "quarter":
+			// Calculate the next quarter's start month
+			const currentMonth = nextStart.getMonth();
+			const nextQuarterStartMonth = Math.floor(currentMonth / 3) * 3 + 3;
+			nextStart.setMonth(nextQuarterStartMonth, 1);
 			break;
 		case "year":
 			// Next period starts on Jan 1 of the next year
@@ -146,6 +165,13 @@ function periodEnd(date: Date, periodType: PeriodType): Date {
 			// To find the last day of the month:
 			currentEnd.setMonth(currentEnd.getMonth() + 1, 1);
 			currentEnd.setDate(currentEnd.getDate() - 1);
+			break;
+		case "quarter":
+			// Determine the quarter's end month
+			const currentMonth = currentEnd.getMonth();
+			const quarterEndMonth = Math.floor(currentMonth / 3) * 3 + 2;
+			currentEnd.setMonth(quarterEndMonth + 1, 1); // Move to the first day of next month
+			currentEnd.setDate(currentEnd.getDate() - 1); // Go back one day to get last day of quarter
 			break;
 		case "year":
 			// end = Dec 31 of that year
