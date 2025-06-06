@@ -77,6 +77,30 @@
       },
       "sources": [],
       "actions": []
+    },
+    {
+      "name": "ChartKPI",
+      "entrypoint": "./blocks/kpi-chart/index.tsx",
+      "acceptsChildren": false,
+      "category": "Charts",
+      "props": [
+        {
+          "label": "Config",
+          "name": "config",
+          "type": { "kind": "victory-chart|KPIConfig" },
+          "default": null,
+          "placeholder": "...",
+          "help": "The config prop"
+        }
+      ],
+      "events": [],
+      "defaultStyles": {
+        "": {
+          "width": "100%"
+        }
+      },
+      "sources": [],
+      "actions": []
     }
   ],
   "schemas": [
@@ -117,6 +141,35 @@
         }
       },
       "required": ["chartType", "columns", "rows"]
+    },
+    {
+      "$schema": "http://json-schema.org/draft-04/schema#",
+      "id": "KPIConfig",
+      "type": "object",
+      "properties": {
+        "chartType": {
+          "type": "string"
+        },
+        "cells": {
+          "type": "array",
+          "items": {
+            "$ref": "victory-chart|KPICell"
+          }
+        },
+        "startDate": {
+          "type": "date"
+        },
+        "endDate": {
+          "type": "date"
+        },
+        "option3": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string"
+        }
+      },
+      "required": ["chartType", "cells", "startDate", "endDate", "option3"]
     },
     {
       "$schema": "http://json-schema.org/draft-04/schema#",
@@ -198,6 +251,26 @@
         }
       },
       "required": ["columnId", "operator"]
+    },
+    {
+      "$schema": "http://json-schema.org/draft-04/schema#",
+      "id": "KPICell",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "week": {
+          "type": "number"
+        },
+        "year": {
+          "type": "number"
+        },
+        "value": {
+          "type": "number"
+        }
+      },
+      "required": ["id", "week", "year", "value"]
     },
     {
       "$schema": "http://json-schema.org/draft-04/schema#",
