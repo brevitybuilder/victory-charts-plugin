@@ -56,32 +56,30 @@ function addWeeksToDate(startDate: Date, numberOfWeeks: number) {
   return date;
 }
 
-function getMonthStartInWeek(week: number, year: number) {
-	// Get Jan 4th to ensure we're using ISO 8601 (week 1 contains Jan 4)
-	const jan4 = new Date(year, 0, 4);
+function getMonthStartInWeek(startDate: Date, week: number) {
+	const base = new Date(startDate);
+  
+	// Step 1: Add weeks to start date
+	const targetDate = new Date(base);
+	targetDate.setDate(base.getDate() + week * 7);
 
-	// Get the Monday of week 1
-	const dayOfWeek = jan4.getDay(); // 0 = Sun, 1 = Mon, ..., 6 = Sat
-	const diffToMonday = ((dayOfWeek + 6) % 7); // how many days to subtract to get to Monday
-	const week1Monday = new Date(jan4);
-	week1Monday.setDate(jan4.getDate() - diffToMonday);
-
-	// Get the Monday of the target week
-	const targetMonday = new Date(week1Monday);
-	targetMonday.setDate(week1Monday.getDate() + (week - 1) * 7);
-
-	// Check each day from Monday to Sunday of the target week
-	for (let i = 0; i < 7; i++) {
-		const currentDate = new Date(targetMonday);
-		currentDate.setDate(targetMonday.getDate() + i);
-
-		if (currentDate.getDate() === 1) {
-			return currentDate;
+	// Step 2: Look both backward and forward for the nearest 1st of a month
+	for (let offset = 0; offset <= 31; offset++) {
+		// Check backward first if offset > 0
+		if (offset > 0) {
+		const back = new Date(targetDate);
+		back.setDate(back.getDate() - offset);
+		if (back.getDate() === 1) return back;
 		}
+
+		// Check forward (including offset 0)
+		const forward = new Date(targetDate);
+		forward.setDate(forward.getDate() + offset);
+		if (forward.getDate() === 1) return forward;
 	}
 
-	// If no day in the week has a day=1, return null or throw
-	return targetMonday;
+	// Fallback (should never happen)
+	return targetDate;
 }
 
 function LineVariant({
@@ -98,8 +96,8 @@ function LineVariant({
 		cumulativeTotal += cell.value;
 		const periodType = config.option3;
 		const weekStart = periodType == "week" ? 
-			addWeeksToDate(config.startDate, --cell.week) : 
-			getMonthStartInWeek(cell.week, cell.year);
+			addWeeksToDate(config.startDate, cell.week) : 
+			getMonthStartInWeek(config.startDate, cell.week);
 		return {
 			x: formatDate(weekStart),
 			y: config.type == "cumulative" ? cumulativeTotal : cell.value,
