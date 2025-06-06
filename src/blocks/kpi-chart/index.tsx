@@ -181,6 +181,27 @@ function periodEnd(date: Date, periodType: PeriodType): Date {
 	return currentEnd;
 }
 
+function getStartDateOfWeek(week: number, year: number) {
+  // Create a new date object for January 1st of the given year
+  const jan1 = new Date(year, 0, 1);
+
+  // Get the day of the week for Jan 1 (0 = Sunday, 1 = Monday, ..., 6 = Saturday)
+  const dayOfWeek = jan1.getDay();
+
+  // Calculate how many days to the first Monday of the year
+  const dayDiffToMonday = (dayOfWeek === 0 ? -6 : 1) - dayOfWeek;
+
+  // Get the date of the first Monday of the year
+  const firstMonday = new Date(jan1);
+  firstMonday.setDate(jan1.getDate() + dayDiffToMonday);
+
+  // Add (week - 1) * 7 days to get the Monday of the target week
+  const weekStartDate = new Date(firstMonday);
+  weekStartDate.setDate(firstMonday.getDate() + (week - 1) * 7);
+
+  return weekStartDate;
+}
+
 function generatePeriods(
 	startDate: Date,
 	endDate: Date,
@@ -243,25 +264,34 @@ function LineVariant({
 	config: Extract<ChartProps, { chartType: "line" }>;
 	className?: string;
 }) {
-	const periods = generatePeriods(
-		new Date(config.startDate),
-		new Date(config.endDate),
-		config.option3,
-	);
+	// const periods = generatePeriods(
+	// 	new Date(config.startDate),
+	// 	new Date(config.endDate),
+	// 	config.option3,
+	// );
+
+	// const chartData = periods.map((period) => {
+	// 	const count = config.cells.reduce((acc, cell) => {
+	// 		const cellIsInRange = isWeekInRange(cell.year, cell.week, period.start, period.end);
+	// 		const valueNum = cellIsInRange ? cell.value : 0;
+	// 		return acc + valueNum;
+	// 	}, 0);
+	// 	cumulativeTotal += count;
+	// 	return {
+	// 		x: formatDate(period.start),
+	// 		y: config.type == "cumulative" ? cumulativeTotal : count,
+	// 	};
+	// });
 	let cumulativeTotal = 0;
-	const chartData = periods.map((period) => {
-		const count = config.cells.reduce((acc, cell) => {
-			const cellIsInRange = isWeekInRange(cell.year, cell.week, period.start, period.end);
-			const valueNum = cellIsInRange ? cell.value : 0;
-			return acc + valueNum;
-		}, 0);
-		cumulativeTotal += count;
+	const chartData = config.cells.map(cell => {
+		cumulativeTotal += cell.value;
+		const weekStart = getStartDateOfWeek(cell.week, cell.year);
 		return {
-			x: formatDate(period.start),
-			y: config.type == "cumulative" ? cumulativeTotal : count,
+			x: formatDate(weekStart),
+			y: config.type == "cumulative" ? cumulativeTotal : cell.value,
 		};
 	});
-	console.log("CHART DATA", chartData);
+	
 	const chartConfig = {
 		y: {
 			label: "Count",
