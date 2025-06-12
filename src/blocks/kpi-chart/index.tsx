@@ -96,12 +96,14 @@ function LineVariant({
 }) {
 
 	let cumulativeTotal = 0;
+	const firstWeekCell = config.cells[0];
+	const adjustment = firstWeekCell?.week == 0 ? 1 : 0;
 	const chartData = config.cells.map(cell => {
 		cumulativeTotal += cell.value;
 		const periodType = config.option3;
 		const weekStart = periodType == "week" ? 
-			getDateOfWeekInYear(config.startDate, cell.week, cell.year) : 
-			getMonthStartInWeek(config.startDate, cell.week, cell.year);
+			getDateOfWeekInYear(config.startDate, cell.week + adjustment, cell.year) : 
+			getMonthStartInWeek(config.startDate, cell.week + adjustment, cell.year);
 		return {
 			x: formatDate(weekStart),
 			y: config.type == "cumulative" ? cumulativeTotal : cell.value,
