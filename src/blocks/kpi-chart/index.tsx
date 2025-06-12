@@ -50,36 +50,40 @@ export function ChartKPI({
 	/>)
 }
 
-function addWeeksToDate(startDate: Date, numberOfWeeks: number) {
-  const date = new Date(startDate); // Ensure it's a Date object
-  date.setDate(date.getDate() + numberOfWeeks * 7);
-  return date;
+function getDateOfWeekInYear(startDate: Date, week: number, year: number) {
+  	const inputDate = new Date(startDate);
+    const dayOfWeek = inputDate.getDay(); // Sunday = 0, Monday = 1, ..., Saturday = 6
+
+    // Get first day of the year
+    const jan1 = new Date(year, 0, 1);
+    const daysOffset = (week - 1) * 7 + (dayOfWeek - jan1.getDay());
+
+    // Create the final date
+    const resultDate = new Date(jan1);
+    resultDate.setDate(jan1.getDate() + daysOffset);
+    return resultDate;
 }
 
-function getMonthStartInWeek(startDate: Date, week: number) {
-	const base = new Date(startDate);
-  
-	// Step 1: Add weeks to start date
-	const targetDate = new Date(base);
-	targetDate.setDate(base.getDate() + week * 7);
+function getMonthStartInWeek(startDate: Date, week: number, year: number) {
+	const targetDate = getDateOfWeekInYear(startDate, week, year);
+    
+    const currentMonthStart = new Date(targetDate.getFullYear(), targetDate.getMonth(), 1);
+    const nextMonthStart = new Date(targetDate.getFullYear(), targetDate.getMonth() + 1, 1);
+    const prevMonthStart = new Date(targetDate.getFullYear(), targetDate.getMonth() - 1, 1);
 
-	// Step 2: Look both backward and forward for the nearest 1st of a month
-	for (let offset = 0; offset <= 31; offset++) {
-		// Check backward first if offset > 0
-		if (offset > 0) {
-		const back = new Date(targetDate);
-		back.setDate(back.getDate() - offset);
-		if (back.getDate() === 1) return back;
-		}
+    // Get time differences
+    const diffCurrent = Math.abs(targetDate - currentMonthStart);
+    const diffNext = Math.abs(targetDate - nextMonthStart);
+    const diffPrev = Math.abs(targetDate - prevMonthStart);
 
-		// Check forward (including offset 0)
-		const forward = new Date(targetDate);
-		forward.setDate(forward.getDate() + offset);
-		if (forward.getDate() === 1) return forward;
-	}
-
-	// Fallback (should never happen)
-	return targetDate;
+    // Find nearest start of month
+    if (diffPrev <= diffCurrent && diffPrev <= diffNext) {
+        return prevMonthStart;
+    } else if (diffCurrent <= diffNext) {
+        return currentMonthStart;
+    } else {
+        return nextMonthStart;
+    }
 }
 
 function LineVariant({
@@ -96,8 +100,8 @@ function LineVariant({
 		cumulativeTotal += cell.value;
 		const periodType = config.option3;
 		const weekStart = periodType == "week" ? 
-			addWeeksToDate(config.startDate, cell.week) : 
-			getMonthStartInWeek(config.startDate, cell.week);
+			getDateOfWeekInYear(config.startDate, cell.week, cell.year) : 
+			getMonthStartInWeek(config.startDate, cell.week, cell.year);
 		return {
 			x: formatDate(weekStart),
 			y: config.type == "cumulative" ? cumulativeTotal : cell.value,
