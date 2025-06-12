@@ -224,7 +224,7 @@ export function Chart({
 	users: Status[];
 	playbookCreatedAt: Date;
 }) {
-	console.log("victory-chart", config, statuses);
+	//console.log("victory-chart", config, statuses);
 	config.statusById = React.useMemo(() => {
 		return (
 			statuses?.reduce(
@@ -634,7 +634,7 @@ function BarVariant({
 		config.userById,
 	);
 	const chartConfig: ChartConfig = {};
-	const chartData = Object.entries(groups).map(([label, rows], idx) => {
+	const chartData = Object.entries(groups).sort(([a], [b]) => a.localeCompare(b)).map(([label, rows], idx) => {
 		if (!rows || !rows.length) {
 			return {
 				label,
