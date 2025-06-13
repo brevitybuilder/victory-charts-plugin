@@ -1,0 +1,63 @@
+:root {
+  --chart-1: #4e79a7; /* Blue */
+  --chart-2: #f28e2c; /* Orange */
+  --chart-3: #e15759; /* Red */
+  --chart-4: #76b7b2; /* Teal */
+  --chart-5: #59a14f; /* Green */
+  --chart-6: #edc949; /* Yellow */
+  --chart-7: #af7aa1; /* Purple */
+  --chart-8: #ff9da7; /* Pink */
+  --chart-9: #9c755f; /* Brown */
+  --chart-10: #bab0ab; /* Gray */
+}
+
+.chart {
+  height: 100%;
+  width: 100%;
+}
+
+.donutLabel {
+  fill: var(--theme-colors-gray-800);
+  font-size: 1.875rem;
+  line-height: 2.25rem;
+  font-weight: 700;
+}
+
+.donutLabelSecondary {
+  fill: var(--theme-colors-gray-500);
+}
+
+.square {
+  aspect-ratio: 1;
+}
+
+.polarGrid:first-child {
+  fill: var(--chart-border-alpha);
+}
+.polarGrid:last-child {
+  fill: white;
+}
+
+.noData {
+  color: var(--theme-colors-gray-500);
+}
+
+.backButton {
+  outline: none;
+  background: none;
+  border: none;
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  top: 0;
+  left: 0;
+  padding: 4px 8px;
+  cursor: pointer;
+  border-radius: 0.5rem;
+  z-index: 1;
+}
+
+.backButton:hover {
+  background: var(--theme-colors-gray-100);
+}
