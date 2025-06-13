@@ -1209,7 +1209,7 @@ function PolarVariant({
 
 	const centerX = dimensions.width / 2;
 	const centerY = dimensions.height / 2;
-	console.log(centerX, centerY);
+	//console.log(centerX, centerY);
 	return (
 		// @ts-ignore
 		<ChartContainer
